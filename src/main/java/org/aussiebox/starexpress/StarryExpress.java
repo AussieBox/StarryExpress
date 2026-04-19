@@ -8,10 +8,12 @@ import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.particle.v1.FabricParticleTypes;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particle.SimpleParticleType;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import net.minecraft.resource.ResourceType;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -24,6 +26,7 @@ import org.aussiebox.starexpress.cca.AbilityComponent;
 import org.aussiebox.starexpress.cca.SilenceComponent;
 import org.aussiebox.starexpress.cca.StarstruckComponent;
 import org.aussiebox.starexpress.config.StarryExpressServerConfig;
+import org.aussiebox.starexpress.guidebook.GuidebookEntryCollector;
 import org.aussiebox.starexpress.item.StarryExpressItems;
 import org.aussiebox.starexpress.packet.AbilityC2SPacket;
 import org.slf4j.Logger;
@@ -53,6 +56,8 @@ public class StarryExpress implements ModInitializer {
         registerPackets();
         registerEvents();
         registerParticles();
+
+        ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(GuidebookEntryCollector.INSTANCE);
     }
 
     public void registerPackets() {
