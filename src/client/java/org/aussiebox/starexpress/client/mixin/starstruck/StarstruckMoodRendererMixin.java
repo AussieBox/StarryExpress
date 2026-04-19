@@ -1,14 +1,14 @@
 package org.aussiebox.starexpress.client.mixin.starstruck;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import dev.doctor4t.wathe.cca.GameWorldComponent;
 import dev.doctor4t.wathe.client.gui.MoodRenderer;
-import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.Identifier;
 import org.aussiebox.starexpress.StarryExpress;
 import org.aussiebox.starexpress.StarryExpressRoles;
 import org.aussiebox.starexpress.cca.AbilityComponent;
@@ -30,14 +30,14 @@ import static dev.doctor4t.wathe.client.gui.MoodRenderer.ARROW_UP;
 @Mixin(MoodRenderer.class)
 public class StarstruckMoodRendererMixin {
 
-    @Unique private static final ResourceLocation ABILITY_HAPPY = StarryExpress.id("hud/starstruck/ability_happy");
-    @Unique private static final ResourceLocation ABILITY_MID = StarryExpress.id("hud/starstruck/ability_mid");
-    @Unique private static final ResourceLocation ABILITY_DEPRESSIVE = StarryExpress.id("hud/starstruck/ability_depressive");
-    @Unique private static final ResourceLocation ABILITY_SPARKLES = StarryExpress.id("hud/starstruck/ability_sparkles");
-    @Unique private static final ResourceLocation HAPPY = StarryExpress.id("hud/starstruck/happy");
-    @Unique private static final ResourceLocation MID = StarryExpress.id("hud/starstruck/mid");
-    @Unique private static final ResourceLocation DEPRESSIVE = StarryExpress.id("hud/starstruck/depressive");
-    @Unique private static final ResourceLocation SPARKLES = StarryExpress.id("hud/starstruck/sparkles");
+    @Unique private static final Identifier ABILITY_HAPPY = StarryExpress.id("hud/starstruck/ability_happy");
+    @Unique private static final Identifier ABILITY_MID = StarryExpress.id("hud/starstruck/ability_mid");
+    @Unique private static final Identifier ABILITY_DEPRESSIVE = StarryExpress.id("hud/starstruck/ability_depressive");
+    @Unique private static final Identifier ABILITY_SPARKLES = StarryExpress.id("hud/starstruck/ability_sparkles");
+    @Unique private static final Identifier HAPPY = StarryExpress.id("hud/starstruck/happy");
+    @Unique private static final Identifier MID = StarryExpress.id("hud/starstruck/mid");
+    @Unique private static final Identifier DEPRESSIVE = StarryExpress.id("hud/starstruck/depressive");
+    @Unique private static final Identifier SPARKLES = StarryExpress.id("hud/starstruck/sparkles");
     @Unique private static float oldMood;
 
     @Shadow public static float moodRender;
@@ -58,22 +58,22 @@ public class StarstruckMoodRendererMixin {
 
     @Inject(
             method = "renderHud",
-            at = @At(value = "INVOKE", target = "Ldev/doctor4t/wathe/client/gui/MoodRenderer;renderCivilian(Lnet/minecraft/client/gui/Font;Lnet/minecraft/client/gui/GuiGraphics;F)V"),
+            at = @At(value = "INVOKE", target = "Ldev/doctor4t/wathe/client/gui/MoodRenderer;renderCivilian(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/client/gui/DrawContext;F)V"),
             cancellable = true
     )
-    private static void starexpress$renderStarstruckMoodTextures(Player player, Font textRenderer, GuiGraphics context, DeltaTracker tickCounter, CallbackInfo ci) {
+    private static void starexpress$renderStarstruckMoodTextures(PlayerEntity player, TextRenderer textRenderer, DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         if (player == null) return;
 
-        GameWorldComponent gameWorldComponent = GameWorldComponent.KEY.get(player.level());
+        GameWorldComponent gameWorldComponent = GameWorldComponent.KEY.get(player.getWorld());
         if (gameWorldComponent.getRole(player) == null) return;
         if (!gameWorldComponent.isRole(player, StarryExpressRoles.STARSTRUCK)) return;
 
         ci.cancel();
         StarstruckComponent starstruck = StarstruckComponent.KEY.get(player);
-        ResourceLocation mood;
+        Identifier mood;
 
-        context.pose().pushPose();
-        context.pose().translate(0.0F, 3.0F * moodOffset, 0.0F);
+        context.getMatrices().push();
+        context.getMatrices().translate(0.0F, 3.0F * moodOffset, 0.0F);
 
         if (starstruck.ticks > 0) {
             mood = ABILITY_HAPPY;
@@ -99,32 +99,32 @@ public class StarstruckMoodRendererMixin {
             }
         }
 
-        context.blitSprite(mood, 5, 6, 14, 17);
+        context.drawGuiTexture(mood, 5, 6, 14, 17);
         if (Math.abs(arrowProgress) > 0.01F) {
             boolean up = arrowProgress > 0.0F;
-            ResourceLocation arrow = up ? ARROW_UP : ARROW_DOWN;
-            context.pose().pushPose();
+            Identifier arrow = up ? ARROW_UP : ARROW_DOWN;
+            context.getMatrices().push();
             if (!up) {
-                context.pose().translate(0.0F, 4.0F, 0.0F);
+                context.getMatrices().translate(0.0F, 4.0F, 0.0F);
             }
 
-            context.pose().translate(0.0F, arrowProgress * 4.0F, 0.0F);
-            context.blit(7, 6, 0, 10, 13, Minecraft.getInstance().getGuiSprites().getSprite(arrow), 1.0F, 1.0F, 1.0F, (float)Math.sin((double)Math.abs(arrowProgress) * Math.PI));
-            context.pose().popPose();
+            context.getMatrices().translate(0.0F, arrowProgress * 4.0F, 0.0F);
+            context.drawSprite(7, 6, 0, 10, 13, MinecraftClient.getInstance().getGuiAtlasManager().getSprite(arrow), 1.0F, 1.0F, 1.0F, (float)Math.sin((double)Math.abs(arrowProgress) * Math.PI));
+            context.getMatrices().pop();
         }
         if (starstruck.ticks > 0)
-            context.blitSprite(ABILITY_SPARKLES, 5, 6, 14, 17);
+            context.drawGuiTexture(ABILITY_SPARKLES, 5, 6, 14, 17);
         else if (AbilityComponent.KEY.get(player).cooldown == 0)
-            context.blitSprite(SPARKLES, 5, 6, 14, 17);
+            context.drawGuiTexture(SPARKLES, 5, 6, 14, 17);
 
-        context.pose().popPose();
-        context.pose().pushPose();
-        context.pose().translate(0.0F, 10.0F * moodOffset, 0.0F);
-        PoseStack pose = context.pose();
+        context.getMatrices().pop();
+        context.getMatrices().push();
+        context.getMatrices().translate(0.0F, 10.0F * moodOffset, 0.0F);
+        MatrixStack pose = context.getMatrices();
         Objects.requireNonNull(textRenderer);
         pose.translate(26.0F, (float)(8 + 9), 0.0F);
-        context.pose().scale((moodTextWidth - 8.0F) * moodRender, 1.0F, 1.0F);
+        context.getMatrices().scale((moodTextWidth - 8.0F) * moodRender, 1.0F, 1.0F);
         context.fill(0, 0, 1, 1, StarryExpressUtil.lerpColor(0x271BAD, 0x6156E6, moodRender) | (int)(moodAlpha * 255.0F) << 24);
-        context.pose().popPose();
+        context.getMatrices().pop();
     }
 }

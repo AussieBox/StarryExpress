@@ -1,7 +1,7 @@
 package org.aussiebox.starexpress;
 
 import dev.doctor4t.ratatouille.util.registrar.SoundEventRegistrar;
-import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sound.SoundEvent;
 
 public interface ModSounds {
 

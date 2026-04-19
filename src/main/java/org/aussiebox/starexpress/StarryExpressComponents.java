@@ -1,6 +1,6 @@
 package org.aussiebox.starexpress;
 
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.entity.player.PlayerEntity;
 import org.aussiebox.starexpress.cca.AbilityComponent;
 import org.aussiebox.starexpress.cca.AllergicComponent;
 import org.aussiebox.starexpress.cca.SilenceComponent;
@@ -15,16 +15,16 @@ public class StarryExpressComponents implements EntityComponentInitializer, Worl
 
     @Override
     public void registerEntityComponentFactories(EntityComponentFactoryRegistry registry) {
-        registry.beginRegistration(Player.class, AbilityComponent.KEY)
+        registry.beginRegistration(PlayerEntity.class, AbilityComponent.KEY)
                 .respawnStrategy(RespawnCopyStrategy.NEVER_COPY)
                 .end(AbilityComponent::new);
-        registry.beginRegistration(Player.class, StarstruckComponent.KEY)
+        registry.beginRegistration(PlayerEntity.class, StarstruckComponent.KEY)
                 .respawnStrategy(RespawnCopyStrategy.NEVER_COPY)
                 .end(StarstruckComponent::new);
-        registry.beginRegistration(Player.class, AllergicComponent.KEY)
+        registry.beginRegistration(PlayerEntity.class, AllergicComponent.KEY)
                 .respawnStrategy(RespawnCopyStrategy.NEVER_COPY)
                 .end(AllergicComponent::new);
-        registry.beginRegistration(Player.class, SilenceComponent.KEY)
+        registry.beginRegistration(PlayerEntity.class, SilenceComponent.KEY)
                 .respawnStrategy(RespawnCopyStrategy.NEVER_COPY)
                 .end(SilenceComponent::new);
     }

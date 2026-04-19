@@ -1,12 +1,12 @@
 package org.aussiebox.starexpress.client.mixin.starstruck;
 
 import dev.doctor4t.wathe.cca.GameWorldComponent;
-import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.chat.Component;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.text.Text;
 import org.aussiebox.starexpress.StarryExpressRoles;
 import org.aussiebox.starexpress.cca.AbilityComponent;
 import org.aussiebox.starexpress.client.StarryExpressClient;
@@ -16,27 +16,27 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(Gui.class)
+@Mixin(InGameHud.class)
 public abstract class StarstruckHudMixin {
-    @Shadow public abstract Font getFont();
+    @Shadow public abstract TextRenderer getTextRenderer();
 
     @Inject(method = "render", at = @At("TAIL"))
-    public void starstruckHud(GuiGraphics context, DeltaTracker tickCounter, CallbackInfo ci) {
-        if (Minecraft.getInstance().player == null) return;
+    public void starstruckHud(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
+        if (MinecraftClient.getInstance().player == null) return;
 
-        GameWorldComponent gameWorldComponent = GameWorldComponent.KEY.get(Minecraft.getInstance().player.level());
-        AbilityComponent abilityComponent = AbilityComponent.KEY.get(Minecraft.getInstance().player);
-        if (gameWorldComponent.isRole(Minecraft.getInstance().player, StarryExpressRoles.STARSTRUCK)) {
-            int drawY = context.guiHeight();
+        GameWorldComponent gameWorldComponent = GameWorldComponent.KEY.get(MinecraftClient.getInstance().player.getWorld());
+        AbilityComponent abilityComponent = AbilityComponent.KEY.get(MinecraftClient.getInstance().player);
+        if (gameWorldComponent.isRole(MinecraftClient.getInstance().player, StarryExpressRoles.STARSTRUCK)) {
+            int drawY = context.getScaledWindowHeight();
 
-            Component line = Component.translatable("tip.starexpress.starstruck", StarryExpressClient.abilityBind.getTranslatedKeyMessage());
+            Text line = Text.translatable("tip.starexpress.starstruck", StarryExpressClient.abilityBind.getBoundKeyLocalizedText());
 
             if (abilityComponent.cooldown > 0) {
-                line = Component.translatable("tip.starexpress.cooldown", abilityComponent.cooldown/20);
+                line = Text.translatable("tip.starexpress.cooldown", abilityComponent.cooldown/20);
             }
 
-            drawY -= getFont().wordWrapHeight(line, 999999);
-            context.drawString(getFont(), line, context.guiWidth() - getFont().width(line), drawY, StarryExpressRoles.STARSTRUCK.color());
+            drawY -= getTextRenderer().getWrappedLinesHeight(line, 999999);
+            context.drawTextWithShadow(getTextRenderer(), line, context.getScaledWindowWidth() - getTextRenderer().getWidth(line), drawY, StarryExpressRoles.STARSTRUCK.color());
         }
     }
 }

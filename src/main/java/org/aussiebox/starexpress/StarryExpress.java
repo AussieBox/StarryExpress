@@ -8,16 +8,16 @@ import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.particle.v1.FabricParticleTypes;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
-import net.minecraft.core.particles.SimpleParticleType;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.particle.SimpleParticleType;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 import org.aussiebox.starexpress.block.ModBlocks;
 import org.aussiebox.starexpress.block.entity.ModBlockEntities;
 import org.aussiebox.starexpress.cca.AbilityComponent;
@@ -58,7 +58,7 @@ public class StarryExpress implements ModInitializer {
     public void registerPackets() {
         ServerPlayNetworking.registerGlobalReceiver(AbilityC2SPacket.TYPE, (payload, context) -> {
             AbilityComponent abilityComponent = AbilityComponent.KEY.get(context.player());
-            GameWorldComponent gameWorldComponent = GameWorldComponent.KEY.get(context.player().level());
+            GameWorldComponent gameWorldComponent = GameWorldComponent.KEY.get(context.player().getWorld());
 
             if (!GameFunctions.isPlayerAliveAndSurvival(context.player())) return;
 
@@ -66,9 +66,9 @@ public class StarryExpress implements ModInitializer {
                 abilityComponent.setCooldown(CONFIG.starstruckConfig.abilityCooldown() * 20);
                 StarstruckComponent.KEY.get(context.player()).setTicks(CONFIG.starstruckConfig.abilityDuration() * 20);
 
-                ServerLevel level = context.player().serverLevel();
-                level.playSound(null, BlockPos.containing(context.player().position()), SoundEvents.RESPAWN_ANCHOR_CHARGE, SoundSource.PLAYERS, 1.0F, 1.0F);
-                level.sendParticles(STARSTRUCK_SPARKLE, context.player().getX(), context.player().getY(), context.player().getZ(), 75,  0.5,  1.5,  0.5,  0.0);
+                ServerWorld level = context.player().getServerWorld();
+                level.playSound(null, BlockPos.ofFloored(context.player().getPos()), SoundEvents.BLOCK_RESPAWN_ANCHOR_CHARGE, SoundCategory.PLAYERS, 1.0F, 1.0F);
+                level.spawnParticles(STARSTRUCK_SPARKLE, context.player().getX(), context.player().getY(), context.player().getZ(), 75,  0.5,  1.5,  0.5,  0.0);
             }
 
         });
@@ -78,16 +78,16 @@ public class StarryExpress implements ModInitializer {
 
         UseEntityCallback.EVENT.register((player, level, hand, entity, hitResult) -> {
 
-            if (!(entity instanceof Player victim)) return InteractionResult.PASS;
-            if (CONFIG.muzzlerConfig.tapeTearCheckCount() == 0) return InteractionResult.PASS;
+            if (!(entity instanceof PlayerEntity victim)) return ActionResult.PASS;
+            if (CONFIG.muzzlerConfig.tapeTearCheckCount() == 0) return ActionResult.PASS;
 
-            if (!player.getMainHandItem().is(StarryExpressItems.TAPE)) {
+            if (!player.getMainHandStack().isOf(StarryExpressItems.TAPE)) {
                 SilenceComponent victimSilence = SilenceComponent.KEY.get(victim);
-                if (!victimSilence.isSilenced()) return InteractionResult.PASS;
-                if (SilenceComponent.KEY.get(player).isSilenced()) return InteractionResult.PASS;
+                if (!victimSilence.isSilenced()) return ActionResult.PASS;
+                if (SilenceComponent.KEY.get(player).isSilenced()) return ActionResult.PASS;
 
                 victimSilence.setTearChecks(victimSilence.getTearChecks() + 1);
-                victim.level().playSound(null, victim.getX(), victim.getY(), victim.getZ(), ModSounds.ITEM_TAPE_APPLY, SoundSource.PLAYERS, 1.0F, 2.0F);
+                victim.getWorld().playSound(null, victim.getX(), victim.getY(), victim.getZ(), ModSounds.ITEM_TAPE_APPLY, SoundCategory.PLAYERS, 1.0F, 2.0F);
 
                 if (victimSilence.getTearChecks() >= CONFIG.muzzlerConfig.tapeTearCheckCount()) victimSilence.setSilenced(false);
 
@@ -99,23 +99,23 @@ public class StarryExpress implements ModInitializer {
                 victimMood.sync();
 
                 if (victimMood.getMood() <= 0.0F && CONFIG.muzzlerConfig.killIfCheckedAtZero()) {
-                    GameFunctions.killPlayer(victim, true, victim.level().getPlayerByUUID(victimSilence.getSilencer()), StarryExpressConstants.SILENCED_TAPE_REMOVED_DEATH_REASON);
+                    GameFunctions.killPlayer(victim, true, victim.getWorld().getPlayerByUuid(victimSilence.getSilencer()), StarryExpressConstants.SILENCED_TAPE_REMOVED_DEATH_REASON);
                 }
 
-                return InteractionResult.SUCCESS;
+                return ActionResult.SUCCESS;
             }
 
-            return InteractionResult.PASS;
+            return ActionResult.PASS;
         });
 
     }
 
     public void registerParticles() {
-        Registry.register(BuiltInRegistries.PARTICLE_TYPE, id("starstruck_sparkle"), STARSTRUCK_SPARKLE);
+        Registry.register(Registries.PARTICLE_TYPE, id("starstruck_sparkle"), STARSTRUCK_SPARKLE);
     }
 
-    public static ResourceLocation id(String key) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, key);
+    public static Identifier id(String key) {
+        return Identifier.of(MOD_ID, key);
     }
 
 }

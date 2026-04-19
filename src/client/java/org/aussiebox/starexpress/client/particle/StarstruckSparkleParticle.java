@@ -2,54 +2,54 @@ package org.aussiebox.starexpress.client.particle;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.particle.AnimatedParticle;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.particle.ParticleProvider;
-import net.minecraft.client.particle.SimpleAnimatedParticle;
-import net.minecraft.client.particle.SpriteSet;
-import net.minecraft.core.particles.SimpleParticleType;
+import net.minecraft.client.particle.ParticleFactory;
+import net.minecraft.client.particle.SpriteProvider;
+import net.minecraft.client.world.ClientWorld;
+import net.minecraft.particle.SimpleParticleType;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 
-public class StarstruckSparkleParticle extends SimpleAnimatedParticle {
+public class StarstruckSparkleParticle extends AnimatedParticle {
 
-    StarstruckSparkleParticle(ClientLevel clientLevel, double d, double e, double f, double g, double h, double i, SpriteSet spriteSet) {
+    StarstruckSparkleParticle(ClientWorld clientLevel, double d, double e, double f, double g, double h, double i, SpriteProvider spriteSet) {
         super(clientLevel, d, e, f, spriteSet, 0.0125F);
-        this.friction = 0.0F;
-        this.gravity = 0.0F;
-        this.xd = g;
-        this.yd = h;
-        this.zd = i;
-        this.quadSize *= 0.75F;
-        this.lifetime = 30 + this.random.nextInt(12);
-        this.hasPhysics = true;
-        this.setFadeColor(Color.WHITE.getRGB());
-        this.setSpriteFromAge(spriteSet);
+        this.velocityMultiplier = 0.0F;
+        this.gravityStrength = 0.0F;
+        this.velocityX = g;
+        this.velocityY = h;
+        this.velocityZ = i;
+        this.scale *= 0.75F;
+        this.maxAge = 30 + this.random.nextInt(12);
+        this.collidesWithWorld = true;
+        this.setTargetColor(Color.WHITE.getRGB());
+        this.setSpriteForAge(spriteSet);
     }
 
     @Override
     public void tick() {
-        this.setSprite(this.sprites.get(this.age, this.lifetime));
-        if (this.age++ >= this.lifetime)
-            this.remove();
+        this.setSprite(this.spriteProvider.getSprite(this.age, this.maxAge));
+        if (this.age++ >= this.maxAge)
+            this.markDead();
     }
 
     @Override
     public void move(double d, double e, double f) {
-        this.setBoundingBox(this.getBoundingBox().move(d, e, f));
-        this.setLocationFromBoundingbox();
+        this.setBoundingBox(this.getBoundingBox().offset(d, e, f));
+        this.repositionFromBoundingBox();
     }
 
     @Environment(EnvType.CLIENT)
-    public static class Provider implements ParticleProvider<SimpleParticleType> {
-        private final SpriteSet sprites;
+    public static class Provider implements ParticleFactory<SimpleParticleType> {
+        private final SpriteProvider sprites;
 
-        public Provider(SpriteSet spriteSet) {
+        public Provider(SpriteProvider spriteSet) {
             this.sprites = spriteSet;
         }
 
-        public Particle createParticle(@NotNull SimpleParticleType simpleParticleType, @NotNull ClientLevel clientLevel, double d, double e, double f, double g, double h, double i) {
+        public Particle createParticle(@NotNull SimpleParticleType simpleParticleType, @NotNull ClientWorld clientLevel, double d, double e, double f, double g, double h, double i) {
             return new StarstruckSparkleParticle(clientLevel, d, e, f, g, h, i, this.sprites);
         }
     }

@@ -1,8 +1,8 @@
 package org.aussiebox.starexpress.cca;
 
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.RegistryWrapper;
 import org.aussiebox.starexpress.StarryExpress;
 import org.jetbrains.annotations.NotNull;
 import org.ladysnake.cca.api.v3.component.ComponentKey;
@@ -15,7 +15,7 @@ import java.util.UUID;
 public class AllergicComponent implements AutoSyncedComponent, ServerTickingComponent {
     public static final ComponentKey<AllergicComponent> KEY = ComponentRegistry.getOrCreate(StarryExpress.id("allergic"), AllergicComponent.class);
 
-    private final Player player;
+    private final PlayerEntity player;
     public int armor = 0;
 
     public String allergyType;
@@ -24,7 +24,7 @@ public class AllergicComponent implements AutoSyncedComponent, ServerTickingComp
 
     private int glowTicks;
 
-    public AllergicComponent(Player player) {
+    public AllergicComponent(PlayerEntity player) {
         this.player = player;
     }
 
@@ -84,16 +84,16 @@ public class AllergicComponent implements AutoSyncedComponent, ServerTickingComp
     }
 
     @Override
-    public void readFromNbt(CompoundTag tag, HolderLookup.@NotNull Provider registryLookup) {
-        this.allergic = tag.contains("allergic") ? tag.getUUID("allergic") : null;
+    public void readFromNbt(NbtCompound tag, RegistryWrapper.@NotNull WrapperLookup registryLookup) {
+        this.allergic = tag.contains("allergic") ? tag.getUuid("allergic") : null;
         this.armor = tag.contains("armor") ? tag.getInt("armor") : 0;
         this.glowTicks = tag.contains("glow_ticks") ? tag.getInt("glow_ticks") : 0;
         this.allergyType = tag.contains("allergy_type") ? tag.getString("allergy_type") : "none";
     }
 
     @Override
-    public void writeToNbt(CompoundTag tag, HolderLookup.@NotNull Provider registryLookup) {
-        tag.putUUID("allergic", this.allergic != null ? this.allergic : UUID.fromString("e1e89fbb-3beb-492a-b1be-46a4ce19c9d1"));
+    public void writeToNbt(NbtCompound tag, RegistryWrapper.@NotNull WrapperLookup registryLookup) {
+        tag.putUuid("allergic", this.allergic != null ? this.allergic : UUID.fromString("e1e89fbb-3beb-492a-b1be-46a4ce19c9d1"));
         tag.putInt("armor", this.armor);
         tag.putInt("glow_ticks", this.glowTicks);
         tag.putString("allergy_type", this.allergyType != null ? this.allergyType : "none");

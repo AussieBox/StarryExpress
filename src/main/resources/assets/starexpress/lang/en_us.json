@@ -27,10 +27,6 @@
   "hud.allergic.effect.armor": "I feel unstoppable!",
   "hud.allergic.effect.poison": "... Something's not right.",
 
-  "config.starexpress.server.category.roles": "Role/Modifier Config",
-  "config.starexpress.server.starstruck.reduce_cooldown": "Reduce Ability Cooldown On Task Completion",
-  "config.starexpress.server.starstruck.ability_duration": "Ability Duration",
-
   "guidebook.tooltip.open": "Open Guidebook",
   "guidebook.category.roles": "Roles",
       "guidebook.category.roles.good": "Good Roles",

@@ -2,29 +2,29 @@ package org.aussiebox.starexpress.client.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import dev.doctor4t.wathe.cca.GameWorldComponent;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.World;
 import org.aussiebox.starexpress.StarryExpress;
 import org.aussiebox.starexpress.StarryExpressRoles;
 import org.aussiebox.starexpress.cca.StarstruckComponent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-@Mixin(value = Player.class, priority = 1500)
+@Mixin(value = PlayerEntity.class, priority = 1500)
 public abstract class PlayerEntityMixin extends LivingEntity {
-    protected PlayerEntityMixin(EntityType<? extends LivingEntity> entityType, Level level) {
+    protected PlayerEntityMixin(EntityType<? extends LivingEntity> entityType, World level) {
         super(entityType, level);
     }
 
     @ModifyReturnValue(
-            method = {"getSpeed()F"},
+            method = {"getMovementSpeed()F"},
             at = {@At("RETURN")}
     )
     public float overrideMovementSpeed(float original) {
-        Player player = (Player) (Object) this;
-        if (GameWorldComponent.KEY.get(player.level()).isRole(player, StarryExpressRoles.STARSTRUCK) && StarstruckComponent.KEY.get(player).ticks > 0) {
+        PlayerEntity player = (PlayerEntity) (Object) this;
+        if (GameWorldComponent.KEY.get(player.getWorld()).isRole(player, StarryExpressRoles.STARSTRUCK) && StarstruckComponent.KEY.get(player).ticks > 0) {
             if (!StarryExpress.CONFIG.starstruckConfig.abilityAffectsMovementSpeed()) return original;
             return this.isSprinting() ? StarryExpress.CONFIG.starstruckConfig.abilitySprintSpeed() : StarryExpress.CONFIG.starstruckConfig.abilityWalkSpeed();
         } else {

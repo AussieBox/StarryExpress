@@ -1,9 +1,9 @@
 package org.aussiebox.starexpress.cca;
 
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.server.network.ServerPlayerEntity;
 import org.aussiebox.starexpress.StarryExpress;
 import org.jetbrains.annotations.NotNull;
 import org.ladysnake.cca.api.v3.component.ComponentKey;
@@ -13,10 +13,10 @@ import org.ladysnake.cca.api.v3.component.tick.ServerTickingComponent;
 
 public class StarstruckComponent implements AutoSyncedComponent, ServerTickingComponent {
     public static final ComponentKey<StarstruckComponent> KEY = ComponentRegistry.getOrCreate(StarryExpress.id("starstruck"), StarstruckComponent.class);
-    private final Player player;
+    private final PlayerEntity player;
     public int ticks = 0;
 
-    public StarstruckComponent(Player player) {
+    public StarstruckComponent(PlayerEntity player) {
         this.player = player;
     }
 
@@ -24,8 +24,8 @@ public class StarstruckComponent implements AutoSyncedComponent, ServerTickingCo
     public void serverTick() {
         if (this.ticks > 0) {
             --this.ticks;
-            if (player instanceof ServerPlayer serverPlayer) {
-                serverPlayer.serverLevel().sendParticles(StarryExpress.STARSTRUCK_SPARKLE, serverPlayer.getX(), serverPlayer.getY()+0.2, serverPlayer.getZ(), player.getRandom().nextIntBetweenInclusive(1, 2), 0.2, 0, 0.2, 0);
+            if (player instanceof ServerPlayerEntity serverPlayer) {
+                serverPlayer.getServerWorld().spawnParticles(StarryExpress.STARSTRUCK_SPARKLE, serverPlayer.getX(), serverPlayer.getY()+0.2, serverPlayer.getZ(), player.getRandom().nextBetween(1, 2), 0.2, 0, 0.2, 0);
             }
             this.sync();
         }
@@ -45,11 +45,13 @@ public class StarstruckComponent implements AutoSyncedComponent, ServerTickingCo
         this.sync();
     }
 
-    public void writeToNbt(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider registryLookup) {
+    @Override
+    public void writeToNbt(@NotNull NbtCompound tag, RegistryWrapper.@NotNull WrapperLookup registryLookup) {
         tag.putInt("ticks", this.ticks);
     }
 
-    public void readFromNbt(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider registryLookup) {
+    @Override
+    public void readFromNbt(@NotNull NbtCompound tag, RegistryWrapper.@NotNull WrapperLookup registryLookup) {
         this.ticks = tag.contains("ticks") ? tag.getInt("ticks") : 0;
     }
 }

@@ -1,8 +1,8 @@
 package org.aussiebox.starexpress.cca;
 
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.RegistryWrapper;
 import org.aussiebox.starexpress.StarryExpress;
 import org.jetbrains.annotations.NotNull;
 import org.ladysnake.cca.api.v3.component.ComponentKey;
@@ -13,11 +13,11 @@ import org.ladysnake.cca.api.v3.component.tick.ServerTickingComponent;
 
 public class AbilityComponent implements AutoSyncedComponent, ServerTickingComponent, ClientTickingComponent {
     public static final ComponentKey<AbilityComponent> KEY = ComponentRegistry.getOrCreate(StarryExpress.id("ability"), AbilityComponent.class);
-    private final Player player;
+    private final PlayerEntity player;
     public int cooldown = 0;
 
 
-    public AbilityComponent(Player player) {
+    public AbilityComponent(PlayerEntity player) {
         this.player = player;
     }
 
@@ -54,11 +54,11 @@ public class AbilityComponent implements AutoSyncedComponent, ServerTickingCompo
         this.sync();
     }
 
-    public void writeToNbt(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider registryLookup) {
+    public void writeToNbt(@NotNull NbtCompound tag, RegistryWrapper.@NotNull WrapperLookup registryLookup) {
         tag.putInt("cooldown", this.cooldown);
     }
 
-    public void readFromNbt(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider registryLookup) {
+    public void readFromNbt(@NotNull NbtCompound tag, RegistryWrapper.@NotNull WrapperLookup registryLookup) {
         this.cooldown = tag.contains("cooldown") ? tag.getInt("cooldown") : 0;
     }
 }

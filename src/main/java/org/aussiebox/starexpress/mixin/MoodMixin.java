@@ -2,7 +2,7 @@ package org.aussiebox.starexpress.mixin;
 
 import dev.doctor4t.wathe.cca.GameWorldComponent;
 import dev.doctor4t.wathe.cca.PlayerMoodComponent;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.entity.player.PlayerEntity;
 import org.aussiebox.starexpress.StarryExpress;
 import org.aussiebox.starexpress.StarryExpressRoles;
 import org.aussiebox.starexpress.cca.AbilityComponent;
@@ -20,11 +20,11 @@ public abstract class MoodMixin {
     public abstract float getMood();
 
     @Shadow @Final
-    private Player player;
+    private PlayerEntity player;
 
     @Inject(method = "setMood", at = @At("HEAD"))
     void setMood(float mood, CallbackInfo ci) {
-        GameWorldComponent gameWorldComponent = GameWorldComponent.KEY.get(player.level());
+        GameWorldComponent gameWorldComponent = GameWorldComponent.KEY.get(player.getWorld());
         if (mood > getMood()) {
             if (gameWorldComponent.getRole(player) == StarryExpressRoles.STARSTRUCK) {
                 if (!StarryExpress.CONFIG.starstruckConfig.taskReducesCooldown()) return;

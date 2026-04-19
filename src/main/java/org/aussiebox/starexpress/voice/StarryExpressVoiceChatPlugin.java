@@ -5,7 +5,7 @@ import de.maxhenkel.voicechat.api.VoicechatPlugin;
 import de.maxhenkel.voicechat.api.events.EventRegistration;
 import de.maxhenkel.voicechat.api.events.MicrophonePacketEvent;
 import dev.doctor4t.wathe.game.GameFunctions;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerPlayerEntity;
 import org.aussiebox.starexpress.StarryExpress;
 import org.aussiebox.starexpress.cca.SilenceComponent;
 
@@ -30,7 +30,7 @@ public class StarryExpressVoiceChatPlugin implements VoicechatPlugin {
     }
 
     public void microphonePacketEvent(MicrophonePacketEvent event) {
-        ServerPlayer sender = (ServerPlayer) Objects.requireNonNull(event.getSenderConnection()).getPlayer().getPlayer();
+        ServerPlayerEntity sender = (ServerPlayerEntity) Objects.requireNonNull(event.getSenderConnection()).getPlayer().getPlayer();
         SilenceComponent silence = SilenceComponent.KEY.get(sender);
 
         if (silence.isSilenced()) {

@@ -14,12 +14,12 @@ import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.container.ScrollContainer;
 import io.wispforest.owo.ui.core.*;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.locale.Language;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.text.Style;
+import net.minecraft.text.Text;
+import net.minecraft.util.Language;
 import org.agmas.harpymodloader.component.WorldModifierComponent;
 import org.agmas.harpymodloader.modifiers.HMLModifiers;
 import org.agmas.harpymodloader.modifiers.Modifier;
@@ -46,7 +46,7 @@ public class GuidebookScreen extends BaseOwoScreen<FlowLayout> {
     public Map<String, RoleInfo> getRoleInfo() {
 
         for (Role role : WatheRoles.ROLES) {
-            if (!Language.getInstance().has("guidebook.role." + role.identifier())) continue;
+            if (!Language.getInstance().hasTranslation("guidebook.role." + role.identifier())) continue;
             GuidebookEntry entry = GuidebookEntry.NONE;
             if (role.isInnocent() && !role.canUseKiller()) entry = GuidebookEntry.GOOD;
             if (!role.isInnocent() && !role.canUseKiller()) entry = GuidebookEntry.NEUTRAL;
@@ -55,7 +55,7 @@ public class GuidebookScreen extends BaseOwoScreen<FlowLayout> {
         }
 
         for (Modifier mod : HMLModifiers.MODIFIERS) {
-            if (!Language.getInstance().has("guidebook.role." + mod.identifier())) continue;
+            if (!Language.getInstance().hasTranslation("guidebook.role." + mod.identifier())) continue;
             roleInfo.putIfAbsent(String.valueOf(mod.identifier()), new RoleInfo(mod.identifier().getNamespace(), RoleType.MODIFIER, mod.color(), GuidebookEntry.NONE));
         }
 
@@ -103,8 +103,8 @@ public class GuidebookScreen extends BaseOwoScreen<FlowLayout> {
 
         /// OPEN CURRENT ROLE IF POSSIBLE
 
-        Player player = Minecraft.getInstance().player;
-        GameWorldComponent game = GameWorldComponent.KEY.get(player.level());
+        PlayerEntity player = MinecraftClient.getInstance().player;
+        GameWorldComponent game = GameWorldComponent.KEY.get(player.getWorld());
 
         if (!game.isRunning()) return;
         if (!GameFunctions.isPlayerAliveAndSurvival(player)) return;
@@ -131,12 +131,12 @@ public class GuidebookScreen extends BaseOwoScreen<FlowLayout> {
         ScrollContainer<FlowLayout> roleDescription = Containers.verticalScroll(Sizing.fill(), Sizing.fill(), Containers.verticalFlow(Sizing.content(), Sizing.content())).scrollbar(ScrollContainer.Scrollbar.flat(Color.WHITE)).scrollbarThiccness(1).scrollStep(8);
         FlowLayout scrollLayout = (FlowLayout) roleDescription.children().getFirst();
         scrollLayout.clearChildren();
-        scrollLayout.child(Components.label(Component.empty()).horizontalTextAlignment(HorizontalAlignment.LEFT).sizing(Sizing.fill(), Sizing.content()).id("role_description"));
+        scrollLayout.child(Components.label(Text.empty()).horizontalTextAlignment(HorizontalAlignment.LEFT).sizing(Sizing.fill(), Sizing.content()).id("role_description"));
         scrollLayout.child(Components.box(Sizing.fill(), Sizing.fixed(80)).color(Color.ofArgb(0x00000000)));
 
-        this.currentInformationFlow.child(Components.label(Component.empty().withStyle(Style.EMPTY.withFont(StarryExpress.id("guidebook_heading")))).lineHeight(18).horizontalTextAlignment(HorizontalAlignment.LEFT).sizing(Sizing.fill(), Sizing.content()).margins(Insets.bottom(3)).id("role_name")).padding(Insets.horizontal(10));
-        this.currentInformationFlow.child(Components.label(Component.empty()).horizontalTextAlignment(HorizontalAlignment.LEFT).sizing(Sizing.fill(), Sizing.content()).margins(Insets.bottom(3)).id("role_title")).padding(Insets.horizontal(10));
-        this.currentInformationFlow.child(Components.label(Component.empty()).horizontalTextAlignment(HorizontalAlignment.LEFT).sizing(Sizing.fill(), Sizing.content()).margins(Insets.bottom(10)).id("role_credits")).padding(Insets.horizontal(10));
+        this.currentInformationFlow.child(Components.label(Text.empty().setStyle(Style.EMPTY.withFont(StarryExpress.id("guidebook_heading")))).lineHeight(18).horizontalTextAlignment(HorizontalAlignment.LEFT).sizing(Sizing.fill(), Sizing.content()).margins(Insets.bottom(3)).id("role_name")).padding(Insets.horizontal(10));
+        this.currentInformationFlow.child(Components.label(Text.empty()).horizontalTextAlignment(HorizontalAlignment.LEFT).sizing(Sizing.fill(), Sizing.content()).margins(Insets.bottom(3)).id("role_title")).padding(Insets.horizontal(10));
+        this.currentInformationFlow.child(Components.label(Text.empty()).horizontalTextAlignment(HorizontalAlignment.LEFT).sizing(Sizing.fill(), Sizing.content()).margins(Insets.bottom(10)).id("role_credits")).padding(Insets.horizontal(10));
         this.currentInformationFlow.child(roleDescription).padding(Insets.horizontal(10)).id("role_description_container");
     }
 
@@ -150,17 +150,17 @@ public class GuidebookScreen extends BaseOwoScreen<FlowLayout> {
         layout.clearChildren();
         roleButtons.clear();
 
-        CollapsibleContainer rolesContainer = Containers.collapsible(Sizing.fill(), Sizing.content(), Component.translatable("guidebook.category.roles"), true);
-            CollapsibleContainer goodRolesContainer = Containers.collapsible(Sizing.fill(), Sizing.content(), Component.translatable("guidebook.category.roles.good"), false);
-            CollapsibleContainer neutralRolesContainer = Containers.collapsible(Sizing.fill(), Sizing.content(), Component.translatable("guidebook.category.roles.neutral"), false);
-            CollapsibleContainer evilRolesContainer = Containers.collapsible(Sizing.fill(), Sizing.content(), Component.translatable("guidebook.category.roles.evil"), false);
-        CollapsibleContainer modifiersContainer = Containers.collapsible(Sizing.fill(), Sizing.content(), Component.translatable("guidebook.category.modifiers"), false);
+        CollapsibleContainer rolesContainer = Containers.collapsible(Sizing.fill(), Sizing.content(), Text.translatable("guidebook.category.roles"), true);
+            CollapsibleContainer goodRolesContainer = Containers.collapsible(Sizing.fill(), Sizing.content(), Text.translatable("guidebook.category.roles.good"), false);
+            CollapsibleContainer neutralRolesContainer = Containers.collapsible(Sizing.fill(), Sizing.content(), Text.translatable("guidebook.category.roles.neutral"), false);
+            CollapsibleContainer evilRolesContainer = Containers.collapsible(Sizing.fill(), Sizing.content(), Text.translatable("guidebook.category.roles.evil"), false);
+        CollapsibleContainer modifiersContainer = Containers.collapsible(Sizing.fill(), Sizing.content(), Text.translatable("guidebook.category.modifiers"), false);
 
         for (String roleID : roleInfo.keySet()) {
             RoleInfo roleData = roleInfo.get(roleID);
 
             ButtonComponent button = Components.button(
-                            Component.translatable("guidebook.role." + roleID).withColor(0xFFFFFF).append("                                                                                         "),
+                            Text.translatable("guidebook.role." + roleID).withColor(0xFFFFFF).append("                                                                                         "),
                             buttonComponent -> setDisplayedEntry(roleID)
             ).renderer(ButtonComponent.Renderer.texture(StarryExpress.id("textures/empty.png"), 0, 0, 1, 1));
 
@@ -202,18 +202,18 @@ public class GuidebookScreen extends BaseOwoScreen<FlowLayout> {
         FlowLayout layout = (FlowLayout) this.currentQuickTravelList.children().getFirst();
         layout.clearChildren();
 
-        Player player = Minecraft.getInstance().player;
-        GameWorldComponent world = GameWorldComponent.KEY.get(player.level());
-        WorldModifierComponent mod = WorldModifierComponent.KEY.get(player.level());
+        PlayerEntity player = MinecraftClient.getInstance().player;
+        GameWorldComponent world = GameWorldComponent.KEY.get(player.getWorld());
+        WorldModifierComponent mod = WorldModifierComponent.KEY.get(player.getWorld());
 
-        CollapsibleContainer modifierContainer = Containers.collapsible(Sizing.expand(40), Sizing.content(), Component.translatable("guidebook.category.modifiers"), true);
+        CollapsibleContainer modifierContainer = Containers.collapsible(Sizing.expand(40), Sizing.content(), Text.translatable("guidebook.category.modifiers"), true);
 
         for (Modifier modifier : mod.getModifiers(player)) {
             String modID = modifier.identifier.toString();
             if (!roleInfo.containsKey(modID)) continue;
 
             ButtonComponent button = Components.button(
-                    Component.translatable("guidebook.role." + modID).withColor(0xFFFFFF).append("                                                                                         "),
+                    Text.translatable("guidebook.role." + modID).withColor(0xFFFFFF).append("                                                                                         "),
                     buttonComponent -> openToEntry(modID)
             ).renderer(ButtonComponent.Renderer.texture(StarryExpress.id("textures/empty.png"), 0, 0, 1, 1));
 
@@ -222,11 +222,11 @@ public class GuidebookScreen extends BaseOwoScreen<FlowLayout> {
 
         String roleID = world.getRole(player).identifier().toString();
         ButtonComponent button = Components.button(
-                Component.translatable("guidebook.role." + roleID).withColor(0xFFFFFF).append("                                                                                         "),
+                Text.translatable("guidebook.role." + roleID).withColor(0xFFFFFF).append("                                                                                         "),
                 buttonComponent -> openToEntry(roleID)
         ).renderer(ButtonComponent.Renderer.texture(StarryExpress.id("textures/empty.png"), 0, 0, 1, 1));
 
-        CollapsibleContainer quickTravelContainer = Containers.collapsible(Sizing.expand(), Sizing.content(), Component.translatable("guidebook.category.quick_travel"), false);
+        CollapsibleContainer quickTravelContainer = Containers.collapsible(Sizing.expand(), Sizing.content(), Text.translatable("guidebook.category.quick_travel"), false);
 
         if (roleInfo.containsKey(roleID)) quickTravelContainer.child(button.sizing(Sizing.content(), Sizing.content()).id("quick_travel." + roleID));
         quickTravelContainer.child(modifierContainer);
@@ -249,18 +249,18 @@ public class GuidebookScreen extends BaseOwoScreen<FlowLayout> {
         LabelComponent roleTitle = this.currentInformationFlow.childById(LabelComponent.class, "role_title");
         LabelComponent roleCredits = this.currentInformationFlow.childById(LabelComponent.class, "role_credits");
         LabelComponent roleDescription = this.currentInformationFlow.childById(LabelComponent.class, "role_description");
-        roleName.text(Component.translatable("guidebook.role." + roleID).withColor(roleInfo.get(roleID).color()).withStyle(Style.EMPTY.withFont(StarryExpress.id("guidebook_heading"))));
-        roleTitle.text(Component.literal("- ").append(Component.translatable("guidebook.role.title." + roleID)).append(" -").withColor(roleInfo.get(roleID).color()));
-        roleCredits.text(Component.translatable("guidebook.role.credits").append(Component.translatable("guidebook.namespace." + roleInfo.get(roleID).namespace()).withStyle(Style.EMPTY.withItalic(true))).withColor(0xAAAAAA));
+        roleName.text(Text.translatable("guidebook.role." + roleID).withColor(roleInfo.get(roleID).color()).setStyle(Style.EMPTY.withFont(StarryExpress.id("guidebook_heading"))));
+        roleTitle.text(Text.literal("- ").append(Text.translatable("guidebook.role.title." + roleID)).append(" -").withColor(roleInfo.get(roleID).color()));
+        roleCredits.text(Text.translatable("guidebook.role.credits").append(Text.translatable("guidebook.namespace." + roleInfo.get(roleID).namespace()).setStyle(Style.EMPTY.withItalic(true))).withColor(0xAAAAAA));
         if (roleCreators.containsKey(roleID)) {
-            roleCredits.text(roleCredits.text().copy().append(Component.literal(" (")).withStyle(Style.EMPTY.withItalic(false)).append(Component.translatable("guidebook.role.creator")).append(roleCreators.get(roleID)).append(")"));
+            roleCredits.text(roleCredits.text().copy().append(Text.literal(" (")).fillStyle(Style.EMPTY.withItalic(false)).append(Text.translatable("guidebook.role.creator")).append(roleCreators.get(roleID)).append(")"));
         }
 
         StarryExpressServerConfig.AllergicConfig_ allergicConfig = StarryExpress.CONFIG.allergicConfig;
-        roleDescription.text(Component.translatable(
+        roleDescription.text(Text.translatable(
                 "guidebook.role.description." + roleID,
 
-                Component.translatable("guidebook.parameter.setting"),
+                Text.translatable("guidebook.parameter.setting"),
                 StarryExpress.CONFIG.starstruckConfig.abilityCooldown(),
                 StarryExpress.CONFIG.starstruckConfig.abilityDuration(),
                 allergicConfig.nothingChance() + allergicConfig.instinctChance() + allergicConfig.armorChance() + allergicConfig.poisonChance(),
@@ -274,7 +274,7 @@ public class GuidebookScreen extends BaseOwoScreen<FlowLayout> {
 
         if (Objects.equals(roleID, "starexpress:starstruck")) {
             if (StarryExpress.CONFIG.starstruckConfig.taskReducesCooldown()) {
-                roleDescription.text(roleDescription.text().copy().append(Component.translatable(
+                roleDescription.text(roleDescription.text().copy().append(Text.translatable(
                         "guidebook.role.description.starexpress:starstruck.cooldown_decreased",
                         StarryExpress.CONFIG.starstruckConfig.taskCooldownReduction()
                 )));
@@ -313,15 +313,15 @@ public class GuidebookScreen extends BaseOwoScreen<FlowLayout> {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
 
         if (this.currentQuickTravelList == null) return;
 
         CollapsibleContainer quickTravelContainer = this.currentQuickTravelList.childById(CollapsibleContainer.class, "quick_travel_container");
 
-        Player player = Minecraft.getInstance().player;
-        GameWorldComponent game = GameWorldComponent.KEY.get(player.level());
+        PlayerEntity player = MinecraftClient.getInstance().player;
+        GameWorldComponent game = GameWorldComponent.KEY.get(player.getWorld());
         if (!game.isRunning()) return;
         if (!GameFunctions.isPlayerAliveAndSurvival(player)) return;
 

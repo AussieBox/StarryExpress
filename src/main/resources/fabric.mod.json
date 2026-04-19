@@ -48,6 +48,13 @@
     "fabricloader": ">=${loader_version}",
     "fabric-api": "*",
     "minecraft": "${minecraft_version}",
-    "harpymodloader": "*"
+    "ratatouille": ">=${ratatouille_version}",
+    "wathe": ">=${wathe_version}",
+    "harpymodloader": ">=${harpymodloader_version}",
+    "owo-lib": ">=${owo_version}",
+    "cardinal-components-base": ">=${cca_version}",
+    "cardinal-components-entity": ">=${cca_version}",
+    "cardinal-components-world": ">=${cca_version}",
+    "cardinal-components-scoreboard": ">=${cca_version}"
   }
 }

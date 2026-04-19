@@ -1,11 +1,11 @@
 package org.aussiebox.starexpress.client.mixin.muzzler;
 
 import dev.doctor4t.wathe.client.gui.RoleNameRenderer;
-import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.network.chat.Component;
+import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.text.Text;
 import org.aussiebox.starexpress.StarryExpress;
 import org.aussiebox.starexpress.StarryExpressRoles;
 import org.aussiebox.starexpress.cca.SilenceComponent;
@@ -23,7 +23,7 @@ public class SilencedHudMixin {
             method = "renderHud",
             at = @At("TAIL")
     )
-    private static void silencedTip(Font renderer, LocalPlayer player, GuiGraphics context, DeltaTracker tickCounter, CallbackInfo ci) {
+    private static void silencedTip(TextRenderer renderer, ClientPlayerEntity player, DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         if (StarryExpressClient.target == null) return;
 
         SilenceComponent victimSilence = SilenceComponent.KEY.get(StarryExpressClient.target);
@@ -34,22 +34,22 @@ public class SilencedHudMixin {
     }
 
     @Unique
-    private static void renderSilencedTip(Font renderer, GuiGraphics context) {
-        Component text = Component.translatable("tip.starexpress.muzzler.silenced");
+    private static void renderSilencedTip(TextRenderer renderer, DrawContext context) {
+        Text text = Text.translatable("tip.starexpress.muzzler.silenced");
 
-        context.pose().pushPose();
-        context.pose().translate(context.guiWidth() / 2.0F, context.guiHeight() / 2.0f - 37.5F, 0.0F);
-        context.pose().scale(0.6F, 0.6F, 1.0F);
+        context.getMatrices().push();
+        context.getMatrices().translate(context.getScaledWindowWidth() / 2.0F, context.getScaledWindowHeight() / 2.0f - 37.5F, 0.0F);
+        context.getMatrices().scale(0.6F, 0.6F, 1.0F);
 
-        context.drawString(
+        context.drawTextWithShadow(
                 renderer,
                 text,
-                -renderer.width(text) / 2,
+                -renderer.getWidth(text) / 2,
                 32,
                 StarryExpressRoles.MUZZLER.color()
         );
 
-        context.pose().popPose();
+        context.getMatrices().pop();
     }
 
 }

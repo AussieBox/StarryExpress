@@ -1,14 +1,14 @@
 package org.aussiebox.starexpress.block.entity.custom;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.listener.ClientPlayPacketListener;
+import net.minecraft.network.packet.Packet;
+import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
+import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import org.aussiebox.starexpress.block.entity.ModBlockEntities;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,13 +20,13 @@ public class PlushBlockEntity extends BlockEntity {
         super(ModBlockEntities.PLUSH, pos, state);
     }
 
-    public static void tick(Level world, BlockPos pos, BlockState state, @NotNull PlushBlockEntity spark) {
+    public static void tick(World world, BlockPos pos, BlockState state, @NotNull PlushBlockEntity spark) {
         if (spark.squash > (double)0.0F) {
             spark.squash /= 3.0F;
             if (spark.squash < (double)0.01F) {
                 spark.squash = 0.0F;
                 if (world != null) {
-                    world.sendBlockUpdated(pos, state, state, 2);
+                    world.updateListeners(pos, state, state, 2);
                 }
             }
         }
@@ -35,27 +35,27 @@ public class PlushBlockEntity extends BlockEntity {
 
     public void squish(int squash) {
         this.squash += squash;
-        if (this.level != null) {
-            this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), 2);
+        if (this.world != null) {
+            this.world.updateListeners(this.pos, this.getCachedState(), this.getCachedState(), 2);
         }
 
-        this.setChanged();
+        this.markDirty();
     }
 
-    protected void saveAdditional(CompoundTag nbt, HolderLookup.@NotNull Provider registries) {
+    protected void writeNbt(NbtCompound nbt, RegistryWrapper.@NotNull WrapperLookup registries) {
         nbt.putDouble("squash", this.squash);
     }
 
-    protected void loadAdditional(CompoundTag nbt, HolderLookup.@NotNull Provider registries) {
+    protected void readNbt(NbtCompound nbt, RegistryWrapper.@NotNull WrapperLookup registries) {
         this.squash = nbt.getDouble("squash");
     }
 
-    public @Nullable Packet<ClientGamePacketListener> getUpdatePacket() {
-        return ClientboundBlockEntityDataPacket.create(this);
+    public @Nullable Packet<ClientPlayPacketListener> toUpdatePacket() {
+        return BlockEntityUpdateS2CPacket.create(this);
     }
 
-    public @NotNull CompoundTag getUpdateTag(HolderLookup.@NotNull Provider registries) {
-        return this.saveWithoutMetadata(registries);
+    public @NotNull NbtCompound toInitialChunkDataNbt(RegistryWrapper.@NotNull WrapperLookup registries) {
+        return this.createNbt(registries);
     }
 }
 

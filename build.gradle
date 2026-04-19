@@ -60,12 +60,12 @@ repositories {
 dependencies {
     // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings loom.officialMojangMappings()
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    modApi "dev.doctor4t:wathe:${project.wathe_version}"
-    modApi "maven.modrinth:harpymodloader:${project.harpy_mod_loader_version}"
+    modImplementation "dev.doctor4t:wathe:${project.wathe_version}"
+    modImplementation "maven.modrinth:harpymodloader:${project.harpy_mod_loader_version}"
 
     modApi "maven.modrinth:stupid-express:${project.stupid_express_version}"
     modApi "maven.modrinth:noelles-roles-tmm:${project.noelles_roles_version}"
@@ -96,7 +96,12 @@ processResources {
     filesMatching("fabric.mod.json") {
         expand "version": project.version,
                 "minecraft_version": project.minecraft_version,
-                "loader_version": project.loader_version
+                "loader_version": project.loader_version,
+                "ratatouille_version": project.ratatouille_version,
+                "wathe_version": project.wathe_version,
+                "harpymodloader_version": project.harpy_mod_loader_version,
+                "owo_version": project.owo_version,
+                "cca_version": project.cca_version
     }
 }
 

@@ -3,8 +3,8 @@ package org.aussiebox.starexpress.client.mixin.muzzler;
 import dev.doctor4t.wathe.cca.GameWorldComponent;
 import dev.doctor4t.wathe.client.gui.screen.ingame.LimitedInventoryScreen;
 import dev.doctor4t.wathe.util.ShopEntry;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.world.level.Level;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.world.World;
 import org.aussiebox.starexpress.StarryExpressConstants;
 import org.aussiebox.starexpress.StarryExpressRoles;
 import org.spongepowered.asm.mixin.Final;
@@ -18,7 +18,7 @@ import java.util.List;
 @Mixin(LimitedInventoryScreen.class)
 public class MuzzlerShopMixin {
 
-    @Shadow @Final public LocalPlayer player;
+    @Shadow @Final public ClientPlayerEntity player;
 
     @ModifyVariable(
             method = "init",
@@ -28,7 +28,7 @@ public class MuzzlerShopMixin {
             ),
             name = "entries")
     private List<ShopEntry> modifyMuzzlerShop(List<ShopEntry> shopEntries) {
-        Level level = this.player.level();
+        World level = this.player.getWorld();
         GameWorldComponent game = GameWorldComponent.KEY.get(level);
 
         if (game.isRole(this.player, StarryExpressRoles.MUZZLER)) {

@@ -5,13 +5,13 @@ import dev.doctor4t.wathe.cca.PlayerShopComponent;
 import dev.doctor4t.wathe.index.WatheSounds;
 import dev.doctor4t.wathe.util.ShopEntry;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.ChatFormatting;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.game.ClientboundSoundPacket;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
+import net.minecraft.registry.Registries;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import org.aussiebox.starexpress.StarryExpressConstants;
 import org.aussiebox.starexpress.StarryExpressRoles;
 import org.spongepowered.asm.mixin.Final;
@@ -27,13 +27,13 @@ public abstract class MuzzlerShopComponentMixin {
     public int balance;
 
     @Shadow @Final
-    private Player player;
+    private PlayerEntity player;
 
     @Shadow public abstract void sync();
 
     @Inject(method = "tryBuy", at = @At("HEAD"), cancellable = true)
     void tryBuy(int index, CallbackInfo ci) {
-        GameWorldComponent gameWorldComponent = GameWorldComponent.KEY.get(player.level());
+        GameWorldComponent gameWorldComponent = GameWorldComponent.KEY.get(player.getWorld());
         if (gameWorldComponent.isRole(player, StarryExpressRoles.MUZZLER)) {
 
             if (index >= 0 && index < StarryExpressConstants.MUZZLER_SHOP.size()) {
@@ -42,19 +42,19 @@ public abstract class MuzzlerShopComponentMixin {
                     this.balance = entry.price() * 10;
                 }
 
-                if (this.balance >= entry.price() && !this.player.getCooldowns().isOnCooldown(entry.stack().getItem()) && entry.onBuy(this.player)) {
+                if (this.balance >= entry.price() && !this.player.getItemCooldownManager().isCoolingDown(entry.stack().getItem()) && entry.onBuy(this.player)) {
                     this.balance -= entry.price();
-                    Player var6 = this.player;
-                    if (var6 instanceof ServerPlayer) {
-                        ServerPlayer player = (ServerPlayer)var6;
-                        player.connection.send(new ClientboundSoundPacket(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(WatheSounds.UI_SHOP_BUY), SoundSource.PLAYERS, player.getX(), player.getY(), player.getZ(), 1.0F, 0.9F + this.player.getRandom().nextFloat() * 0.2F, player.getRandom().nextLong()));
+                    PlayerEntity var6 = this.player;
+                    if (var6 instanceof ServerPlayerEntity) {
+                        ServerPlayerEntity player = (ServerPlayerEntity)var6;
+                        player.networkHandler.sendPacket(new PlaySoundS2CPacket(Registries.SOUND_EVENT.getEntry(WatheSounds.UI_SHOP_BUY), SoundCategory.PLAYERS, player.getX(), player.getY(), player.getZ(), 1.0F, 0.9F + this.player.getRandom().nextFloat() * 0.2F, player.getRandom().nextLong()));
                     }
                 } else {
-                    this.player.displayClientMessage(Component.literal("Purchase Failed").withStyle(ChatFormatting.DARK_RED), true);
-                    Player var4 = this.player;
-                    if (var4 instanceof ServerPlayer) {
-                        ServerPlayer player = (ServerPlayer)var4;
-                        player.connection.send(new ClientboundSoundPacket(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(WatheSounds.UI_SHOP_BUY_FAIL), SoundSource.PLAYERS, player.getX(), player.getY(), player.getZ(), 1.0F, 0.9F + this.player.getRandom().nextFloat() * 0.2F, player.getRandom().nextLong()));
+                    this.player.sendMessage(Text.literal("Purchase Failed").formatted(Formatting.DARK_RED), true);
+                    PlayerEntity var4 = this.player;
+                    if (var4 instanceof ServerPlayerEntity) {
+                        ServerPlayerEntity player = (ServerPlayerEntity)var4;
+                        player.networkHandler.sendPacket(new PlaySoundS2CPacket(Registries.SOUND_EVENT.getEntry(WatheSounds.UI_SHOP_BUY_FAIL), SoundCategory.PLAYERS, player.getX(), player.getY(), player.getZ(), 1.0F, 0.9F + this.player.getRandom().nextFloat() * 0.2F, player.getRandom().nextLong()));
                     }
                 }
 

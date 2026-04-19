@@ -2,14 +2,14 @@ package org.aussiebox.starexpress.mixin.allergic;
 
 import dev.doctor4t.wathe.cca.PlayerPoisonComponent;
 import dev.doctor4t.wathe.item.CocktailItem;
-import net.minecraft.network.chat.Component;
-import net.minecraft.util.Mth;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.food.FoodProperties;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
+import net.minecraft.component.type.FoodComponent;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.text.Text;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.World;
 import org.aussiebox.starexpress.StarryExpress;
 import org.aussiebox.starexpress.StarryExpressModifiers;
 import org.aussiebox.starexpress.cca.AllergicComponent;
@@ -24,25 +24,25 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-@Mixin(Player.class)
+@Mixin(PlayerEntity.class)
 public abstract class AllergicEatMixin extends LivingEntity {
 
-    protected AllergicEatMixin(EntityType<? extends LivingEntity> entityType, Level level) {
+    protected AllergicEatMixin(EntityType<? extends LivingEntity> entityType, World level) {
         super(entityType, level);
     }
 
     @Inject(
-            method = {"eat(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/food/FoodProperties;)Lnet/minecraft/world/item/ItemStack;"},
+            method = {"eatFood(Lnet/minecraft/world/World;Lnet/minecraft/item/ItemStack;Lnet/minecraft/component/type/FoodComponent;)Lnet/minecraft/item/ItemStack;"},
             at = {@At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/food/FoodData;eat(Lnet/minecraft/world/food/FoodProperties;)V",
+                    target = "Lnet/minecraft/entity/player/HungerManager;eat(Lnet/minecraft/component/type/FoodComponent;)V",
                     shift = At.Shift.AFTER
             )}
     )
-    private void allergicConsume(@NotNull Level world, ItemStack stack, FoodProperties foodComponent, CallbackInfoReturnable<ItemStack> cir) {
-        if (world.isClientSide) return;
+    private void allergicConsume(@NotNull World world, ItemStack stack, FoodComponent foodComponent, CallbackInfoReturnable<ItemStack> cir) {
+        if (world.isClient) return;
 
-        Player player = (Player) (Object) this;
+        PlayerEntity player = (PlayerEntity) (Object) this;
         AllergicComponent allergy = AllergicComponent.KEY.get(player);
 
         if (!allergy.isAllergic()) return;
@@ -61,13 +61,13 @@ public abstract class AllergicEatMixin extends LivingEntity {
         if (Objects.equals(effect, "poison")) {
             int poisonTicks = PlayerPoisonComponent.KEY.get(player).poisonTicks;
             if (poisonTicks == -1) {
-                PlayerPoisonComponent.KEY.get(player).setPoisonTicks(world.getRandom().nextIntBetweenInclusive(PlayerPoisonComponent.clampTime.getA(), PlayerPoisonComponent.clampTime.getB()), player.getUUID());
+                PlayerPoisonComponent.KEY.get(player).setPoisonTicks(world.getRandom().nextBetween(PlayerPoisonComponent.clampTime.getLeft(), PlayerPoisonComponent.clampTime.getRight()), player.getUuid());
             } else {
-                PlayerPoisonComponent.KEY.get(player).setPoisonTicks(Mth.clamp(poisonTicks - world.getRandom().nextIntBetweenInclusive(100, 300), 0, PlayerPoisonComponent.clampTime.getB()), player.getUUID());
+                PlayerPoisonComponent.KEY.get(player).setPoisonTicks(MathHelper.clamp(poisonTicks - world.getRandom().nextBetween(100, 300), 0, PlayerPoisonComponent.clampTime.getRight()), player.getUuid());
             }
 
-            player.displayClientMessage(
-                    Component.translatable(
+            player.sendMessage(
+                    Text.translatable(
                             "hud.allergic.effect.poison"
                     ).withColor(StarryExpressModifiers.ALLERGIC.color()),
                     true
@@ -77,8 +77,8 @@ public abstract class AllergicEatMixin extends LivingEntity {
             allergy.setGlowTicks(StarryExpress.CONFIG.allergicConfig.instinctDuration() * 20);
             allergy.sync();
 
-            player.displayClientMessage(
-                    Component.translatable(
+            player.sendMessage(
+                    Text.translatable(
                             "hud.allergic.effect.instinct"
                     ).withColor(StarryExpressModifiers.ALLERGIC.color()),
                     true
@@ -87,8 +87,8 @@ public abstract class AllergicEatMixin extends LivingEntity {
         if (Objects.equals(effect, "armor")) {
             allergy.giveArmor();
 
-            player.displayClientMessage(
-                    Component.translatable(
+            player.sendMessage(
+                    Text.translatable(
                             "hud.allergic.effect.armor"
                     ).withColor(StarryExpressModifiers.ALLERGIC.color()),
                     true
