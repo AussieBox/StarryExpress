@@ -21,9 +21,4 @@ public class TextureComponent extends DescriptionComponent {
         width = object.get("width").getAsInt();
         height = object.get("height").getAsInt();
     }
-
-    @Override
-    public String getType() {
-        return "texture";
-    }
 }

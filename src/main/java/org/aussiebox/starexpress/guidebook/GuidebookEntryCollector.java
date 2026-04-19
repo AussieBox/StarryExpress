@@ -7,15 +7,22 @@ import com.google.gson.JsonParser;
 import dev.doctor4t.wathe.api.Role;
 import dev.doctor4t.wathe.api.WatheRoles;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.minecraft.item.Item;
+import net.minecraft.registry.Registries;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
+import org.agmas.harpymodloader.modifiers.HMLModifiers;
+import org.agmas.harpymodloader.modifiers.Modifier;
+import org.apache.logging.log4j.util.Strings;
 import org.aussiebox.starexpress.StarryExpress;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public class GuidebookEntryCollector implements SimpleSynchronousResourceReloadListener {
     public static final GuidebookEntryCollector INSTANCE = new GuidebookEntryCollector();
@@ -32,17 +39,48 @@ public class GuidebookEntryCollector implements SimpleSynchronousResourceReloadL
         entry:
         for (Identifier id : manager.findResources("guidebook_entries", path -> path.getPath().endsWith(".json")).keySet()) {
             try (InputStream stream = manager.getResource(id).orElseThrow().getInputStream()) {
-                StarryExpress.LOGGER.info(String.valueOf(id));
                 JsonObject jsonObject = JsonParser.parseReader(new InputStreamReader(stream, StandardCharsets.UTF_8)).getAsJsonObject();
 
-                /// Fetch Role
-                Role role = null;
-                for (Role checkRole : WatheRoles.ROLES) {
-                    if (id.getPath().endsWith(checkRole.identifier().getPath() + ".json")) role = checkRole;
+                /// Fetch Parent
+                Object parent = null;
+                String[] directories = id.getPath().split("/");
+                if (Arrays.stream(directories).toList().get(1).equals("item")) {
+                    // TODO: Fix item type crashing
+                    StarryExpress.LOGGER.debug(String.valueOf(Identifier.of(id.getNamespace(), Arrays.stream(directories).toList().getLast().replaceAll(".json", Strings.EMPTY))));
+                    Optional<Item> item = Registries.ITEM.getOrEmpty(Identifier.of(id.getNamespace(), Arrays.stream(directories).toList().getLast().replaceAll(".json", Strings.EMPTY)));
+                    if (item.isPresent()) parent = item;
+                    else {
+                        StarryExpress.LOGGER.error("Guidebook entry {} filename does not match an item from parent namespace, ignoring", id);
+                        fails++;
+                        continue;
+                    }
+                } else if (Arrays.stream(directories).toList().get(1).equals("role")) {
+                    for (Role checkRole : WatheRoles.ROLES)
+                        if (id.getPath().endsWith(checkRole.identifier().getPath() + ".json")) parent = checkRole;
+                    if (parent == null) {
+                        StarryExpress.LOGGER.error("Guidebook entry {} filename does not match with any roles, ignoring", id);
+                        fails++;
+                        continue;
+                    }
+                } else if (Arrays.stream(directories).toList().get(1).equals("modifier")) {
+                    for (Modifier checkMod : HMLModifiers.MODIFIERS)
+                        if (id.getPath().endsWith(checkMod.identifier().getPath() + ".json")) parent = checkMod;
+                    if (parent == null) {
+                        StarryExpress.LOGGER.error("Guidebook entry {} filename does not match with any modifiers, ignoring", id);
+                        fails++;
+                        continue;
+                    }
+                } else if (!Arrays.stream(directories).toList().get(1).equals("misc")) {
+                    StarryExpress.LOGGER.error("Guidebook entry {} is not categorised under a valid type, ignoring", id);
+                    fails++;
+                    continue;
                 }
-                if (role == null) {
-                    StarryExpress.LOGGER.error("Guidebook entry {} filename does not match with any roles, ignoring", id);
-                    continue entry;
+                // TODO: Ensure Misc type works
+
+                if (parent == null) {
+                    StarryExpress.LOGGER.error("Guidebook entry {} is missing a valid parent, ignoring", id);
+                    fails++;
+                    continue;
                 }
 
                 ///  Fetch Description
@@ -56,7 +94,7 @@ public class GuidebookEntryCollector implements SimpleSynchronousResourceReloadL
                     JsonArray descArray = jsonObject.getAsJsonArray("description");
                     for (JsonElement element : descArray.asList()) {
                         if (!element.isJsonObject()) {
-                            StarryExpress.LOGGER.error("Element in description of guidebook entry {} is not an object, ignoring", id);
+                            StarryExpress.LOGGER.error("Element in description of guidebook entry {} is not an parent, ignoring", id);
                             fails++;
                             continue entry;
                         }
@@ -87,8 +125,7 @@ public class GuidebookEntryCollector implements SimpleSynchronousResourceReloadL
                     fails++;
                     continue;
                 }
-
-                GuidebookEntry entry = new GuidebookEntry(role, description);
+                GuidebookEntry entry = new GuidebookEntry(parent , description);
                 entries.add(entry);
             } catch (Exception e) {
                 StarryExpress.LOGGER.error("Error occurred while loading guidebook entry {}", id, e);

@@ -12,9 +12,4 @@ public class TextComponent extends DescriptionComponent {
             throw new IllegalArgumentException("JSON Object did not contain text parameter");
         text = object.get("text").getAsString();
     }
-
-    @Override
-    public String getType() {
-        return "text";
-    }
 }

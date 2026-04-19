@@ -10,10 +10,6 @@ public abstract class DescriptionComponent {
         this.id = id;
     }
 
-    public String getType() {
-        return null;
-    }
-
     public enum Alignment implements StringIdentifiable {
         LEFT("left"),
         RIGHT("right");

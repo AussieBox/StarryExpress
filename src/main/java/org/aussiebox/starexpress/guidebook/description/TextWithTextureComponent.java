@@ -31,9 +31,4 @@ public class TextWithTextureComponent extends DescriptionComponent {
             texture_alignment = Alignment.RIGHT;
         }
     }
-
-    @Override
-    public String getType() {
-        return "text_with_texture";
-    }
 }
