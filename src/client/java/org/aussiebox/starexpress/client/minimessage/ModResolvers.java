@@ -1,0 +1,25 @@
+package org.aussiebox.starexpress.client.minimessage;
+
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickCallback;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import net.minecraft.util.Identifier;
+import org.aussiebox.starexpress.client.gui.screen.NewGuidebookScreen;
+
+public class ModResolvers {
+    public static TagResolver guidebookEntryResolver() {
+        return TagResolver.resolver("entry", (args, ctx) -> {
+            ClickEvent clickHandler = ClickEvent.callback(audience -> {
+                String entry = args.popOr("Entry tag requires a guidebook entry's ID as a parameter").value();
+                NewGuidebookScreen.clickHyperlink(Identifier.of(entry));
+            }, ClickCallback.Options.builder().uses(ClickCallback.UNLIMITED_USES).build());
+            HoverEvent<Component> hoverHandler = HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, Component.translatable("guidebook.tooltip.entry_link").color(TextColor.color(0x3D84FF)));
+            return Tag.styling(TextColor.color(0x3D84FF), TextDecoration.UNDERLINED, clickHandler, hoverHandler);
+        });
+    }
+}

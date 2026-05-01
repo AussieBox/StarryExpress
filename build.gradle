@@ -52,6 +52,11 @@ repositories {
         }
     }
     maven {
+        name = "sonatype-oss-snapshots1"
+        url = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+        mavenContent { snapshotsOnly() }
+    }
+    maven {
         name = "DevAuth"
         url = "https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1"
     }
@@ -75,6 +80,8 @@ dependencies {
     modImplementation "org.ladysnake.cardinal-components-api:cardinal-components-world:${project.cca_version}"
     modImplementation "org.ladysnake.cardinal-components-api:cardinal-components-scoreboard:${project.cca_version}"
     modImplementation "dev.doctor4t:ratatouille:${project.ratatouille_version}"
+
+    modImplementation include ("net.kyori:adventure-platform-fabric:${project.adventure_fabric_version}")
 
     implementation "de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}"
 

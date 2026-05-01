@@ -23,6 +23,7 @@ public abstract class StarstruckHudMixin {
     @Inject(method = "render", at = @At("TAIL"))
     public void starstruckHud(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         if (MinecraftClient.getInstance().player == null) return;
+        if (StarryExpressClient.abilityBind != null) return;
 
         GameWorldComponent gameWorldComponent = GameWorldComponent.KEY.get(MinecraftClient.getInstance().player.getWorld());
         AbilityComponent abilityComponent = AbilityComponent.KEY.get(MinecraftClient.getInstance().player);

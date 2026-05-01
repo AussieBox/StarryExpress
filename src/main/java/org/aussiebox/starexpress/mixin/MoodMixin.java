@@ -27,9 +27,9 @@ public abstract class MoodMixin {
         GameWorldComponent gameWorldComponent = GameWorldComponent.KEY.get(player.getWorld());
         if (mood > getMood()) {
             if (gameWorldComponent.getRole(player) == StarryExpressRoles.STARSTRUCK) {
-                if (!StarryExpress.CONFIG.starstruckConfig.taskReducesCooldown()) return;
+                if (!StarryExpress.SERVER_CONFIG.starstruckConfig.taskReducesCooldown()) return;
                 AbilityComponent ability = AbilityComponent.KEY.get(player);
-                ability.changeCooldown(-(StarryExpress.CONFIG.starstruckConfig.taskCooldownReduction() * 20));
+                ability.changeCooldown(-(StarryExpress.SERVER_CONFIG.starstruckConfig.taskCooldownReduction() * 20));
             }
         }
     }

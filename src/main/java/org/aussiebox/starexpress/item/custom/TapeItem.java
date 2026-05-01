@@ -39,7 +39,7 @@ public class TapeItem extends Item {
         if (victimSilence.isSilenced()) return ActionResult.FAIL;
 
         player.getInventory().removeOne(itemStack);
-        player.getItemCooldownManager().set(itemStack.getItem(), StarryExpress.CONFIG.muzzlerConfig.tapeCooldown() * 20);
+        player.getItemCooldownManager().set(itemStack.getItem(), StarryExpress.SERVER_CONFIG.muzzlerConfig.tapeCooldown() * 20);
 
         player.playSound(ModSounds.ITEM_TAPE_APPLY,1.0F, 1.0F);
 

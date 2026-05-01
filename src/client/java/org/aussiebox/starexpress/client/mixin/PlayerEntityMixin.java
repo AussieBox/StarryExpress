@@ -25,8 +25,8 @@ public abstract class PlayerEntityMixin extends LivingEntity {
     public float overrideMovementSpeed(float original) {
         PlayerEntity player = (PlayerEntity) (Object) this;
         if (GameWorldComponent.KEY.get(player.getWorld()).isRole(player, StarryExpressRoles.STARSTRUCK) && StarstruckComponent.KEY.get(player).ticks > 0) {
-            if (!StarryExpress.CONFIG.starstruckConfig.abilityAffectsMovementSpeed()) return original;
-            return this.isSprinting() ? StarryExpress.CONFIG.starstruckConfig.abilitySprintSpeed() : StarryExpress.CONFIG.starstruckConfig.abilityWalkSpeed();
+            if (!StarryExpress.SERVER_CONFIG.starstruckConfig.abilityAffectsMovementSpeed()) return original;
+            return this.isSprinting() ? StarryExpress.SERVER_CONFIG.starstruckConfig.abilitySprintSpeed() : StarryExpress.SERVER_CONFIG.starstruckConfig.abilityWalkSpeed();
         } else {
             return original;
         }

@@ -28,7 +28,7 @@ public class SilencedHudMixin {
 
         SilenceComponent victimSilence = SilenceComponent.KEY.get(StarryExpressClient.target);
 
-        if (!victimSilence.isSilenced() || victimSilence.getSilencedTicks() < StarryExpress.CONFIG.muzzlerConfig.displaySilencedTipDelay() * 20) return;
+        if (!victimSilence.isSilenced() || victimSilence.getSilencedTicks() < StarryExpress.SERVER_CONFIG.muzzlerConfig.displaySilencedTipDelay() * 20) return;
 
         renderSilencedTip(renderer, context);
     }

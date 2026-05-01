@@ -7,12 +7,12 @@ import net.minecraft.client.render.RenderLayer;
 import net.minecraft.item.Items;
 import net.minecraft.text.Text;
 import org.aussiebox.starexpress.StarryExpress;
-import org.aussiebox.starexpress.client.gui.screen.GuidebookScreen;
+import org.aussiebox.starexpress.client.gui.screen.NewGuidebookScreen;
 import org.jetbrains.annotations.NotNull;
 
 public class GuidebookButtonWidget extends ButtonWidget {
     public GuidebookButtonWidget(int x, int y) {
-        super(x, y, 16, 16, Text.empty(), button -> MinecraftClient.getInstance().setScreen(new GuidebookScreen()), DEFAULT_NARRATION_SUPPLIER);
+        super(x, y, 16, 16, Text.empty(), button -> MinecraftClient.getInstance().setScreen(new NewGuidebookScreen()), DEFAULT_NARRATION_SUPPLIER);
     }
 
     protected void renderWidget(@NotNull DrawContext context, int mouseX, int mouseY, float delta) {

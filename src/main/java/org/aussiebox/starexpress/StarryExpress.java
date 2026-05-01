@@ -8,12 +8,10 @@ import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.particle.v1.FabricParticleTypes;
-import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particle.SimpleParticleType;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
-import net.minecraft.resource.ResourceType;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -25,8 +23,8 @@ import org.aussiebox.starexpress.block.entity.ModBlockEntities;
 import org.aussiebox.starexpress.cca.AbilityComponent;
 import org.aussiebox.starexpress.cca.SilenceComponent;
 import org.aussiebox.starexpress.cca.StarstruckComponent;
+import org.aussiebox.starexpress.config.StarryExpressClientConfig;
 import org.aussiebox.starexpress.config.StarryExpressServerConfig;
-import org.aussiebox.starexpress.guidebook.GuidebookEntryCollector;
 import org.aussiebox.starexpress.item.StarryExpressItems;
 import org.aussiebox.starexpress.packet.AbilityC2SPacket;
 import org.slf4j.Logger;
@@ -36,7 +34,8 @@ public class StarryExpress implements ModInitializer {
 
     public static String MOD_ID = "starexpress";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-    public static final StarryExpressServerConfig CONFIG = StarryExpressServerConfig.createAndLoad();
+    public static final StarryExpressServerConfig SERVER_CONFIG = StarryExpressServerConfig.createAndLoad();
+    public static final StarryExpressClientConfig CLIENT_CONFIG = StarryExpressClientConfig.createAndLoad();
 
     public static final SimpleParticleType STARSTRUCK_SPARKLE = FabricParticleTypes.simple();
 
@@ -56,8 +55,6 @@ public class StarryExpress implements ModInitializer {
         registerPackets();
         registerEvents();
         registerParticles();
-
-        ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(GuidebookEntryCollector.INSTANCE);
     }
 
     public void registerPackets() {
@@ -68,8 +65,8 @@ public class StarryExpress implements ModInitializer {
             if (!GameFunctions.isPlayerAliveAndSurvival(context.player())) return;
 
             if (gameWorldComponent.isRole(context.player(), StarryExpressRoles.STARSTRUCK) && abilityComponent.cooldown <= 0) {
-                abilityComponent.setCooldown(CONFIG.starstruckConfig.abilityCooldown() * 20);
-                StarstruckComponent.KEY.get(context.player()).setTicks(CONFIG.starstruckConfig.abilityDuration() * 20);
+                abilityComponent.setCooldown(SERVER_CONFIG.starstruckConfig.abilityCooldown() * 20);
+                StarstruckComponent.KEY.get(context.player()).setTicks(SERVER_CONFIG.starstruckConfig.abilityDuration() * 20);
 
                 ServerWorld level = context.player().getServerWorld();
                 level.playSound(null, BlockPos.ofFloored(context.player().getPos()), SoundEvents.BLOCK_RESPAWN_ANCHOR_CHARGE, SoundCategory.PLAYERS, 1.0F, 1.0F);
@@ -84,7 +81,7 @@ public class StarryExpress implements ModInitializer {
         UseEntityCallback.EVENT.register((player, level, hand, entity, hitResult) -> {
 
             if (!(entity instanceof PlayerEntity victim)) return ActionResult.PASS;
-            if (CONFIG.muzzlerConfig.tapeTearCheckCount() == 0) return ActionResult.PASS;
+            if (SERVER_CONFIG.muzzlerConfig.tapeTearCheckCount() == 0) return ActionResult.PASS;
 
             if (!player.getMainHandStack().isOf(StarryExpressItems.TAPE)) {
                 SilenceComponent victimSilence = SilenceComponent.KEY.get(victim);
@@ -94,16 +91,16 @@ public class StarryExpress implements ModInitializer {
                 victimSilence.setTearChecks(victimSilence.getTearChecks() + 1);
                 victim.getWorld().playSound(null, victim.getX(), victim.getY(), victim.getZ(), ModSounds.ITEM_TAPE_APPLY, SoundCategory.PLAYERS, 1.0F, 2.0F);
 
-                if (victimSilence.getTearChecks() >= CONFIG.muzzlerConfig.tapeTearCheckCount()) victimSilence.setSilenced(false);
+                if (victimSilence.getTearChecks() >= SERVER_CONFIG.muzzlerConfig.tapeTearCheckCount()) victimSilence.setSilenced(false);
 
                 victimSilence.sync();
 
                 PlayerMoodComponent victimMood = PlayerMoodComponent.KEY.get(victim);
 
-                victimMood.setMood(victimMood.getMood() - CONFIG.muzzlerConfig.tapeTearMoodChange());
+                victimMood.setMood(victimMood.getMood() - SERVER_CONFIG.muzzlerConfig.tapeTearMoodChange());
                 victimMood.sync();
 
-                if (victimMood.getMood() <= 0.0F && CONFIG.muzzlerConfig.killIfCheckedAtZero()) {
+                if (victimMood.getMood() <= 0.0F && SERVER_CONFIG.muzzlerConfig.killIfCheckedAtZero()) {
                     GameFunctions.killPlayer(victim, true, victim.getWorld().getPlayerByUuid(victimSilence.getSilencer()), StarryExpressConstants.SILENCED_TAPE_REMOVED_DEATH_REASON);
                 }
 

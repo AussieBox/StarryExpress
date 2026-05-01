@@ -11,6 +11,7 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.particle.v1.ParticleFactoryRegistry;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
@@ -18,11 +19,14 @@ import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactories;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.resource.ResourceType;
 import org.agmas.noellesroles.client.NoellesrolesClient;
 import org.aussiebox.starexpress.StarryExpress;
 import org.aussiebox.starexpress.StarryExpressRoles;
 import org.aussiebox.starexpress.block.ModBlocks;
 import org.aussiebox.starexpress.block.entity.ModBlockEntities;
+import org.aussiebox.starexpress.client.gui.screen.NewGuidebookScreen;
+import org.aussiebox.starexpress.client.guidebook.GuidebookEntryCollector;
 import org.aussiebox.starexpress.client.particle.StarstruckSparkleParticle;
 import org.aussiebox.starexpress.client.render.blockentity.PlushBlockEntityRenderer;
 import org.aussiebox.starexpress.packet.AbilityC2SPacket;
@@ -33,6 +37,8 @@ public class StarryExpressClient implements ClientModInitializer {
 
     public static PlayerEntity target;
     public static KeyBinding abilityBind;
+
+    public NewGuidebookScreen SCREEN_INSTANCE = new NewGuidebookScreen();
 
     @Override
     public void onInitializeClient() {
@@ -72,6 +78,8 @@ public class StarryExpressClient implements ClientModInitializer {
 
         registerPackets();
         registerParticles();
+
+        ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(GuidebookEntryCollector.INSTANCE);
     }
 
     public void registerPackets() {

@@ -23,22 +23,15 @@ public class SilenceComponent implements AutoSyncedComponent, ServerTickingCompo
 
     private final PlayerEntity player;
 
-    @Setter
-    @Getter
-    private boolean silenced;
+    @Setter @Getter private boolean silenced;
 
-    @Setter
-    @Getter
-    private UUID silencer;
+    @Setter @Getter private UUID silencer;
 
     private int outsideTicks;
 
-    @Setter
-    @Getter
-    private int tearChecks;
+    @Setter @Getter private int tearChecks;
 
-    @Getter
-    private int silencedTicks;
+    @Getter private int silencedTicks;
 
     public SilenceComponent(PlayerEntity player) {
         this.player = player;
@@ -52,8 +45,8 @@ public class SilenceComponent implements AutoSyncedComponent, ServerTickingCompo
         if (Wathe.isSkyVisibleAdjacent(player) && silenced) outsideTicks++;
         else outsideTicks = 0;
 
-        if (StarryExpress.CONFIG.muzzlerConfig.suffocationTime() > 0) {
-            if (outsideTicks >= StarryExpress.CONFIG.muzzlerConfig.suffocationTime() * 20)
+        if (StarryExpress.SERVER_CONFIG.muzzlerConfig.suffocationTime() > 0) {
+            if (outsideTicks >= StarryExpress.SERVER_CONFIG.muzzlerConfig.suffocationTime() * 20)
                 GameFunctions.killPlayer(player, true, player.getWorld().getPlayerByUuid(silencer), StarryExpressConstants.SILENCED_OUTSIDE_DEATH_REASON);
         }
 

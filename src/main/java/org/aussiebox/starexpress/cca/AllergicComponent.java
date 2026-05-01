@@ -1,5 +1,6 @@
 package org.aussiebox.starexpress.cca;
 
+import lombok.Getter;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryWrapper;
@@ -18,18 +19,14 @@ public class AllergicComponent implements AutoSyncedComponent, ServerTickingComp
     private final PlayerEntity player;
     public int armor = 0;
 
-    public String allergyType;
+    @Getter public String allergyType;
 
-    private UUID allergic;
+    @Getter private UUID allergic;
 
-    private int glowTicks;
+    @Getter private int glowTicks;
 
     public AllergicComponent(PlayerEntity player) {
         this.player = player;
-    }
-
-    public String getAllergyType() {
-        return this.allergyType;
     }
 
     public void setAllergyType(String type) {
@@ -37,17 +34,9 @@ public class AllergicComponent implements AutoSyncedComponent, ServerTickingComp
         this.sync();
     }
 
-    public UUID getAllergic() {
-        return this.allergic;
-    }
-
     public void setAllergic(UUID uuid) {
         this.allergic = uuid;
         this.sync();
-    }
-
-    public int getGlowTicks() {
-        return this.glowTicks;
     }
 
     public void setGlowTicks(int ticks) {

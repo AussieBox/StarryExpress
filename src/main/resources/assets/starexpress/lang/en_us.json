@@ -1,4 +1,9 @@
 {
+  "test.text.normal": "Normal translation test",
+  "test.text.minimessage": "<rainbow>MiniMessage translation test (tape!)",
+
+  "keyword.starexpress.tape.tape": "tape",
+
   "key.starexpress.ability": "Ability",
   "tip.starexpress.cooldown": "Ability usable in %ss",
 
@@ -26,13 +31,18 @@
   "hud.allergic.effect.instinct": "My eyesight feels sharper.",
   "hud.allergic.effect.armor": "I feel unstoppable!",
   "hud.allergic.effect.poison": "... Something's not right.",
+  "hud.allergic.effect.forced_poison": "You fool...",
 
   "guidebook.tooltip.open": "Open Guidebook",
+  "guidebook.tooltip.entry_link": "Open Entry",
+  "guidebook.browser": "Entry Browser",
   "guidebook.category.roles": "Roles",
       "guidebook.category.roles.good": "Good Roles",
       "guidebook.category.roles.neutral": "Neutral Roles",
       "guidebook.category.roles.evil": "Evil Roles",
   "guidebook.category.modifiers": "Modifiers",
+  "guidebook.category.items": "Items",
+  "guidebook.category.misc": "Miscellaneous",
   "guidebook.category.quick_travel": "Quick Travel",
   "guidebook.role.credits": "From ",
   "guidebook.role.creator": "By ",

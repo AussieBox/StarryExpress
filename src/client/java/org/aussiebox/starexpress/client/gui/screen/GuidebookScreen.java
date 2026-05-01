@@ -256,27 +256,27 @@ public class GuidebookScreen extends BaseOwoScreen<FlowLayout> {
             roleCredits.text(roleCredits.text().copy().append(Text.literal(" (")).fillStyle(Style.EMPTY.withItalic(false)).append(Text.translatable("guidebook.role.creator")).append(roleCreators.get(roleID)).append(")"));
         }
 
-        StarryExpressServerConfig.AllergicConfig_ allergicConfig = StarryExpress.CONFIG.allergicConfig;
+        StarryExpressServerConfig.AllergicConfig_ allergicConfig = StarryExpress.SERVER_CONFIG.allergicConfig;
         roleDescription.text(Text.translatable(
                 "guidebook.role.description." + roleID,
 
                 Text.translatable("guidebook.parameter.setting"),
-                StarryExpress.CONFIG.starstruckConfig.abilityCooldown(),
-                StarryExpress.CONFIG.starstruckConfig.abilityDuration(),
+                StarryExpress.SERVER_CONFIG.starstruckConfig.abilityCooldown(),
+                StarryExpress.SERVER_CONFIG.starstruckConfig.abilityDuration(),
                 allergicConfig.nothingChance() + allergicConfig.instinctChance() + allergicConfig.armorChance() + allergicConfig.poisonChance(),
                 allergicConfig.nothingChance(),
                 allergicConfig.instinctChance(),
                 allergicConfig.armorChance(),
                 allergicConfig.poisonChance(),
-                StarryExpress.CONFIG.muzzlerConfig.suffocationTime(),
-                StarryExpress.CONFIG.muzzlerConfig.tapeTearCheckCount()
+                StarryExpress.SERVER_CONFIG.muzzlerConfig.suffocationTime(),
+                StarryExpress.SERVER_CONFIG.muzzlerConfig.tapeTearCheckCount()
         ));
 
         if (Objects.equals(roleID, "starexpress:starstruck")) {
-            if (StarryExpress.CONFIG.starstruckConfig.taskReducesCooldown()) {
+            if (StarryExpress.SERVER_CONFIG.starstruckConfig.taskReducesCooldown()) {
                 roleDescription.text(roleDescription.text().copy().append(Text.translatable(
                         "guidebook.role.description.starexpress:starstruck.cooldown_decreased",
-                        StarryExpress.CONFIG.starstruckConfig.taskCooldownReduction()
+                        StarryExpress.SERVER_CONFIG.starstruckConfig.taskCooldownReduction()
                 )));
             }
         }
