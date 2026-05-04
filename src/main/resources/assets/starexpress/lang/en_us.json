@@ -36,6 +36,8 @@
   "guidebook.tooltip.open": "Open Guidebook",
   "guidebook.tooltip.entry_link": "Open Entry",
   "guidebook.browser": "Entry Browser",
+  "guidebook.disabled": "Disabled",
+
   "guidebook.category.roles": "Roles",
       "guidebook.category.roles.good": "Good Roles",
       "guidebook.category.roles.neutral": "Neutral Roles",
@@ -46,6 +48,10 @@
   "guidebook.category.quick_travel": "Quick Travel",
   "guidebook.role.credits": "From ",
   "guidebook.role.creator": "By ",
+
+  "guidebook.starexpress.example.title": "Example Entry",
+  "guidebook.starexpress.example.subtitle": "Example Subtitle",
+  "guidebook.starexpress.example.keyword": "example",
 
   "guidebook.namespace.wathe": "WATHE",
   "guidebook.namespace.starexpress": "Starry Express",

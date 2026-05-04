@@ -52,6 +52,10 @@ repositories {
         }
     }
     maven {
+        name 'Xander Maven'
+        url 'https://maven.isxander.dev/releases'
+    }
+    maven {
         name = "sonatype-oss-snapshots1"
         url = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
         mavenContent { snapshotsOnly() }
@@ -71,6 +75,7 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "dev.doctor4t:wathe:${project.wathe_version}"
     modImplementation "maven.modrinth:harpymodloader:${project.harpy_mod_loader_version}"
+    modImplementation "dev.isxander:yet-another-config-lib:${project.yacl_version}"
 
     modApi "maven.modrinth:stupid-express:${project.stupid_express_version}"
     modApi "maven.modrinth:noelles-roles-tmm:${project.noelles_roles_version}"

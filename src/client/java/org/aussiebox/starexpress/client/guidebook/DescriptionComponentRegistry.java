@@ -32,21 +32,23 @@ public class DescriptionComponentRegistry {
         return registry;
     }
 
-    public static Text parseStringToContent(String string) {
+    public static Text parseStringToContent(String string, boolean includeKeywords) {
         String translated = Text.translatable(string).getString();
-        for (GuidebookEntry entry : GuidebookEntryCollector.guidebookEntries) {
-            for (String keyword : entry.keywords) {
-                StringBuilder parsed = new StringBuilder(Strings.EMPTY);
-                String translatedKeyword = Text.translatable(keyword).getString();
-                String[] split = translated.split("(?<=" + Pattern.quote(translatedKeyword) + ")|(?=" + Pattern.quote(translatedKeyword) + ")");
-                StarryExpress.LOGGER.info(Arrays.toString(split));
-                for (String part : split) {
-                    if (part.matches(translatedKeyword)) parsed.append("<entry:\"").append(entry.getId()).append("\">").append(part).append("</entry>");
-                    else parsed.append(part);
+        if (includeKeywords)
+            for (GuidebookEntry entry : GuidebookEntryCollector.guidebookEntries) {
+                for (String keyword : entry.keywords) {
+                    StringBuilder parsed = new StringBuilder(Strings.EMPTY);
+                    String translatedKeyword = Text.translatable(keyword).getString();
+                    String regex = "(?i)" + Pattern.quote(translatedKeyword);
+                    String[] split = translated.split("(?<=" + regex + ")|(?=" + regex + ")");
+                    StarryExpress.LOGGER.info(Arrays.toString(split));
+                    for (String part : split) {
+                        if (part.equalsIgnoreCase(translatedKeyword)) parsed.append("<entry:\"").append(entry.getId()).append("\">").append(part).append("</entry>");
+                        else parsed.append(part);
+                    }
+                    translated = parsed.toString();
                 }
-                translated = parsed.toString();
             }
-        }
         return Text.translatable(translated);
     }
 }

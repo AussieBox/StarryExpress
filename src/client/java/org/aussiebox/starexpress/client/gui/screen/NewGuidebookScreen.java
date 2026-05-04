@@ -7,6 +7,7 @@ import dev.doctor4t.wathe.api.Role;
 import io.wispforest.owo.ui.base.BaseOwoScreen;
 import io.wispforest.owo.ui.component.ButtonComponent;
 import io.wispforest.owo.ui.component.Components;
+import io.wispforest.owo.ui.component.LabelComponent;
 import io.wispforest.owo.ui.container.CollapsibleContainer;
 import io.wispforest.owo.ui.container.Containers;
 import io.wispforest.owo.ui.container.FlowLayout;
@@ -18,9 +19,12 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.minecraft.item.Item;
 import net.minecraft.text.MutableText;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextCodecs;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Language;
+import org.agmas.harpymodloader.config.HarpyModLoaderConfig;
 import org.agmas.harpymodloader.modifiers.Modifier;
 import org.aussiebox.starexpress.StarryExpress;
 import org.aussiebox.starexpress.client.gui.owo.TextureTitleCollapsibleContainer;
@@ -52,40 +56,41 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
                 layout.alignment(HorizontalAlignment.LEFT, VerticalAlignment.TOP);
                 layout.margins(Insets.of(5, 5, 8, 8));
 
-                    Text translated = DescriptionComponentRegistry.parseStringToContent(entry.title);
-                    Component textComponent = MiniMessage.miniMessage().deserialize(translated.getString());
-                    String textJSON = GsonComponentSerializer.gson().serialize(textComponent);
-                    MutableText parsedText = TextCodecs.CODEC
+                Text translated = DescriptionComponentRegistry.parseStringToContent(entry.title, false);
+                Component textComponent = MiniMessage.miniMessage().deserialize(translated.getString());
+                String textJSON = GsonComponentSerializer.gson().serialize(textComponent);
+                MutableText parsedText = TextCodecs.CODEC
+                        .decode(JsonOps.INSTANCE, new Gson().fromJson(textJSON, JsonElement.class))
+                        .getOrThrow()
+                        .getFirst()
+                        .copy();
+
+                parsedText.setStyle(parsedText.getStyle().withFont(StarryExpress.id("guidebook_heading")));
+                entry.parentRole.ifPresent(role -> parsedText.withColor(role.color()));
+                layout.child(Components.label(parsedText).shadow(true).lineHeight(16).id("title"));
+
+                if (entry.subtitle.isPresent()) {
+                    translated = DescriptionComponentRegistry.parseStringToContent(entry.subtitle.get(), false);
+                    textComponent = MiniMessage.miniMessage().deserialize(translated.getString());
+                    textJSON = GsonComponentSerializer.gson().serialize(textComponent);
+                    MutableText parsedText2 = TextCodecs.CODEC
                             .decode(JsonOps.INSTANCE, new Gson().fromJson(textJSON, JsonElement.class))
                             .getOrThrow()
                             .getFirst()
                             .copy();
 
-                    parsedText.setStyle(parsedText.getStyle().withFont(StarryExpress.id("guidebook_heading")));
-                    entry.parentRole.ifPresent(role -> parsedText.withColor(role.color()));
-                    layout.child(Components.label(parsedText).shadow(true).lineHeight(16));
+                    entry.parentRole.ifPresent(role -> parsedText2.withColor(role.color()));
+                    layout.child(Components.label(parsedText2).shadow(true).id("subtitle"));
+                }
 
-                    if (entry.subtitle.isPresent()) {
-                        translated = DescriptionComponentRegistry.parseStringToContent(entry.subtitle.get());
-                        textComponent = MiniMessage.miniMessage().deserialize(translated.getString());
-                        textJSON = GsonComponentSerializer.gson().serialize(textComponent);
-                        MutableText parsedText2 = TextCodecs.CODEC
-                                .decode(JsonOps.INSTANCE, new Gson().fromJson(textJSON, JsonElement.class))
-                                .getOrThrow()
-                                .getFirst()
-                                .copy();
-
-                        entry.parentRole.ifPresent(role -> parsedText2.withColor(role.color()));
-                        layout.child(Components.label(parsedText2).shadow(true));
-                    }
-
-                layout.child(Components.label(Text.of(" ")));
+                layout.child(Components.label(Text.of(" ")).id("title_spacing"));
 
                 for (DescriptionComponent component : entry.description) {
                     layout.child(component.build().id(component.id));
                 }
                 ScrollContainer<FlowLayout> container = Containers.verticalScroll(Sizing.expand(), Sizing.expand(), layout);
                 container.alignment(HorizontalAlignment.LEFT, VerticalAlignment.TOP);
+
                 switch (entry.parentType) {
                     case GuidebookEntry.ParentType.ROLE -> roleEntryDescriptions.put(entry.parentRole.orElseThrow().identifier(), container);
                     case GuidebookEntry.ParentType.MODIFIER -> modifierEntryDescriptions.put(entry.parentModifier.orElseThrow().identifier(), container);
@@ -122,7 +127,7 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
         CollapsibleContainer miscCategory = Containers.collapsible(Sizing.expand(), Sizing.content(), Text.translatable("guidebook.category.misc"), false);
 
         for (GuidebookEntry entry : GuidebookEntryCollector.guidebookEntries) {
-            Text translated = DescriptionComponentRegistry.parseStringToContent(entry.title);
+            Text translated = DescriptionComponentRegistry.parseStringToContent(entry.title, false);
             Component textComponent = MiniMessage.miniMessage().deserialize(translated.getString()); // No <guidebook> tag for this one
             String textJSON = GsonComponentSerializer.gson().serialize(textComponent);
             MutableText parsedText = TextCodecs.CODEC
@@ -133,7 +138,9 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
 
             ButtonComponent button = Components.button(
                     parsedText.withColor(0xFFFFFF).append("                                                                                         "),
-                    buttonComponent -> setDisplayedEntry(entry, root)
+                    buttonComponent -> {
+                        setDisplayedEntry(entry, root);
+                    }
             ).renderer(ButtonComponent.Renderer.texture(StarryExpress.id("textures/empty.png"), 0, 0, 1, 1));
 
             switch (entry.parentType) {
@@ -184,14 +191,18 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
                     case ROLE -> {
                         if (entry.parentRole.isEmpty()) continue;
                         if (key.equals(entry.parentRole.get().identifier())) {
-                            displayedEntry = descriptions.get(key);
+                            ScrollContainer<FlowLayout> container = descriptions.get((key));
+                            updateRoleFlags(container, entry.parentRole.get());
+                            displayedEntry = container;
                             break update;
                         }
                     }
                     case MODIFIER -> {
                         if (entry.parentModifier.isEmpty()) continue;
                         if (key.equals(entry.parentModifier.get().identifier())) {
-                            displayedEntry = descriptions.get(key);
+                            ScrollContainer<FlowLayout> container = descriptions.get(key);
+                            updateModifierFlags(container, entry.parentModifier.get());
+                            displayedEntry = container;
                             break update;
                         }
                     }
@@ -213,6 +224,54 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
             }
         }
         root.child(displayedEntry);
+    }
+
+    public static void updateRoleFlags(ScrollContainer<FlowLayout> container, Role parent) {
+        int index = container.child().children().indexOf(container.child().childById(FlowLayout.class, "flags"));
+        container.child().removeChild(container.childById(FlowLayout.class, "flags"));
+        FlowLayout flags = Containers.horizontalFlow(Sizing.expand(), Sizing.content());
+        flags.padding(Insets.of(10, 10, 0, 0));
+
+        LabelComponent spacer = Components.label(Text.literal(" • ").withColor(0xAAAAAA));
+
+        boolean disabled = HarpyModLoaderConfig.HANDLER.instance().disabled.contains(parent.identifier().toString());
+        boolean namespaceExists = Language.getInstance().hasTranslation("guidebook.namespace." + parent.identifier().getNamespace());
+
+        if (!disabled && !namespaceExists) return;
+
+        if (disabled) flags.child(Components.label(Text.translatable("guidebook.disabled").withColor(0xFF5555)).shadow(true));
+        if (namespaceExists) {
+            if (!flags.children().isEmpty()) flags.child(spacer);
+            flags.child(Components.label(Text.translatable("guidebook.role.credits").append(Text.translatable("guidebook.namespace." + parent.identifier().getNamespace()).setStyle(Style.EMPTY.withItalic(true))).withColor(0xAAAAAA)).shadow(true));
+        }
+
+        if (index == -1) index = container.child().children().indexOf(container.child().childById(LabelComponent.class, "title_spacing"));
+        container.child().removeChild(container.child().childById(LabelComponent.class, "title_spacing"));
+        container.child().child(index, flags.id("flags"));
+    }
+
+    public static void updateModifierFlags(ScrollContainer<FlowLayout> container, Modifier parent) {
+        int index = container.child().children().indexOf(container.child().childById(FlowLayout.class, "flags"));
+        container.child().removeChild(container.childById(FlowLayout.class, "flags"));
+        FlowLayout flags = Containers.horizontalFlow(Sizing.expand(), Sizing.content());
+        flags.padding(Insets.of(10, 10, 0, 0));
+
+        LabelComponent spacer = Components.label(Text.literal(" • ").withColor(0xAAAAAA));
+
+        boolean disabled = HarpyModLoaderConfig.HANDLER.instance().disabledModifiers.contains(parent.identifier().toString());
+        boolean namespaceExists = Language.getInstance().hasTranslation("guidebook.namespace." + parent.identifier().getNamespace());
+
+        if (!disabled && !namespaceExists) return;
+
+        if (disabled) flags.child(Components.label(Text.translatable("guidebook.disabled").withColor(0xFF5555)).shadow(true));
+        if (namespaceExists) {
+            if (!flags.children().isEmpty()) flags.child(spacer);
+            flags.child(Components.label(Text.translatable("guidebook.role.credits").append(Text.translatable("guidebook.namespace." + parent.identifier().getNamespace()).setStyle(Style.EMPTY.withItalic(true))).withColor(0xAAAAAA)).shadow(true));
+        }
+
+        if (index == -1) index = container.child().children().indexOf(container.child().childById(LabelComponent.class, "title_spacing"));
+        container.child().removeChild(container.child().childById(LabelComponent.class, "title_spacing"));
+        container.child().child(index, flags.id("flags"));
     }
 
     public static void clickHyperlink(Identifier targetEntry) {

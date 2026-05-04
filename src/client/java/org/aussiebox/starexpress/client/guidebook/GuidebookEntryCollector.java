@@ -79,18 +79,14 @@ public class GuidebookEntryCollector implements SimpleSynchronousResourceReloadL
                         fails++;
                         continue;
                     }
-                } else if (!Arrays.stream(directories).toList().get(1).equals("misc")) {
+                } else if (Arrays.stream(directories).toList().get(1).equals("misc")) {
+                    parent = Identifier.of(id.getNamespace(), Arrays.stream(directories).toList().getLast().replaceAll(".json", Strings.EMPTY)).asString();
+                } else {
                     StarryExpress.LOGGER.error("Guidebook entry {} is not categorised under a valid type, ignoring", id);
                     fails++;
                     continue;
                 }
                 // TODO: Ensure Misc type works
-
-                if (parent == null) {
-                    StarryExpress.LOGGER.error("Guidebook entry {} is missing a valid parent, ignoring", id);
-                    fails++;
-                    continue;
-                }
 
                 ///  Fetch Title & Subtitle
                 String title;

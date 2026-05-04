@@ -33,7 +33,7 @@ public class TextComponent extends DescriptionComponent {
 
     @Override
     public FlowLayout build() {
-        Text translated = DescriptionComponentRegistry.parseStringToContent(text);
+        Text translated = DescriptionComponentRegistry.parseStringToContent(text, true);
         Component textComponent = MiniMessage.miniMessage().deserialize(translated.getString(), ModResolvers.guidebookEntryResolver());
         String textJSON = GsonComponentSerializer.gson().serialize(textComponent);
         Text parsedText = TextCodecs.CODEC
