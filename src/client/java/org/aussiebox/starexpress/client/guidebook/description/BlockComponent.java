@@ -7,25 +7,22 @@ import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.core.HorizontalAlignment;
 import io.wispforest.owo.ui.core.Sizing;
 import io.wispforest.owo.ui.core.VerticalAlignment;
-import net.minecraft.block.Block;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
+import net.minecraft.block.BlockState;
+import net.minecraft.item.Item;
+import net.minecraft.item.tooltip.TooltipType;
 import org.aussiebox.starexpress.client.guidebook.DescriptionComponent;
 import org.aussiebox.starexpress.exception.MissingJsonFieldException;
-
-import java.util.Optional;
+import org.aussiebox.starexpress.util.StarryExpressUtil;
 
 public class BlockComponent extends DescriptionComponent {
-    public Block block;
+    public BlockState block;
     public int blockSizing;
 
     public BlockComponent(String id, JsonObject object) {
         super(id, object);
         if (!object.has("block"))
             throw new MissingJsonFieldException("JSON Object did not contain block parameter");
-        Optional<Block> optionalBlock = Registries.BLOCK.getOrEmpty(Identifier.of(object.get("block").getAsString()));
-        if (optionalBlock.isPresent()) block = optionalBlock.get();
-        else throw new NullPointerException("Block returned null after parsing");
+        block = StarryExpressUtil.parseBlockStateFromJson(object.get("block"));
         try {
             blockSizing = object.get("sizing").getAsInt();
         } catch (Exception e) {
@@ -37,7 +34,7 @@ public class BlockComponent extends DescriptionComponent {
     public FlowLayout build() {
         FlowLayout flow = Containers.horizontalFlow(Sizing.expand(), Sizing.content());
         flow.alignment(HorizontalAlignment.CENTER, VerticalAlignment.TOP);
-        flow.child(Components.block(block.getDefaultState()).sizing(Sizing.fixed(blockSizing)));
+        flow.child(Components.block(block).tooltip(block.getBlock().asItem().getDefaultStack().getTooltip(Item.TooltipContext.DEFAULT, null, TooltipType.BASIC)).sizing(Sizing.fixed(blockSizing)));
         return flow;
     }
 }

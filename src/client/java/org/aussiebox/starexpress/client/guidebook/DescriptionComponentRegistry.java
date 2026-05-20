@@ -21,6 +21,7 @@ public class DescriptionComponentRegistry {
         register("text_with_item", TextWithItemComponent.class);
         register("block", BlockComponent.class);
         register("text_with_block", TextWithBlockComponent.class);
+        register("hotbar", HotbarComponent.class);
         register("spacer", SpacerComponent.class);
     }
 

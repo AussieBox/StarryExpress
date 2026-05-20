@@ -23,13 +23,27 @@
       "id": "textanditem",
       "type": "text_with_item",
       "text": "test.text.normal",
-      "item": "starexpress:tape"
+      "item": {
+        "id": "starexpress:tape"
+      }
     },
     {
       "id": "textandblock",
       "type": "text_with_block",
       "text": "test.text.minimessage",
-      "block": "minecraft:emerald_block"
+      "block": {
+        "Name": "minecraft:emerald_block"
+      }
+    },
+    {
+      "id": "hotbarwithitems",
+      "type": "hotbar",
+      "item0": {
+        "id": "starexpress:tape"
+      },
+      "item2": {
+        "id": "minecraft:diamond_block"
+      }
     }
   ]
 }

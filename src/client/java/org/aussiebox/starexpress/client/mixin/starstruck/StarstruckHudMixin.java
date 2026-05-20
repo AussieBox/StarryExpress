@@ -5,6 +5,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.text.Text;
 import org.aussiebox.starexpress.StarryExpressRoles;
@@ -23,14 +24,15 @@ public abstract class StarstruckHudMixin {
     @Inject(method = "render", at = @At("TAIL"))
     public void starstruckHud(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         if (MinecraftClient.getInstance().player == null) return;
-        if (StarryExpressClient.abilityBind != null) return;
+        KeyBinding bind = StarryExpressClient.getAbilityBind();
+        if (bind == null) return;
 
         GameWorldComponent gameWorldComponent = GameWorldComponent.KEY.get(MinecraftClient.getInstance().player.getWorld());
         AbilityComponent abilityComponent = AbilityComponent.KEY.get(MinecraftClient.getInstance().player);
         if (gameWorldComponent.isRole(MinecraftClient.getInstance().player, StarryExpressRoles.STARSTRUCK)) {
             int drawY = context.getScaledWindowHeight();
 
-            Text line = Text.translatable("tip.starexpress.starstruck", StarryExpressClient.abilityBind.getBoundKeyLocalizedText());
+            Text line = Text.translatable("tip.starexpress.starstruck", bind.getBoundKeyLocalizedText());
 
             if (abilityComponent.cooldown > 0) {
                 line = Text.translatable("tip.starexpress.cooldown", abilityComponent.cooldown/20);

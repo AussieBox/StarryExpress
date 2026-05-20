@@ -14,21 +14,20 @@ import io.wispforest.owo.ui.core.VerticalAlignment;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
-import net.minecraft.block.Block;
-import net.minecraft.registry.Registries;
+import net.minecraft.block.BlockState;
+import net.minecraft.item.Item;
+import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextCodecs;
-import net.minecraft.util.Identifier;
 import org.aussiebox.starexpress.client.guidebook.DescriptionComponent;
 import org.aussiebox.starexpress.client.guidebook.DescriptionComponentRegistry;
 import org.aussiebox.starexpress.client.minimessage.ModResolvers;
 import org.aussiebox.starexpress.exception.MissingJsonFieldException;
-
-import java.util.Optional;
+import org.aussiebox.starexpress.util.StarryExpressUtil;
 
 public class TextWithBlockComponent extends DescriptionComponent {
     public String text;
-    public Block block;
+    public BlockState block;
     public Alignment textAlignment;
     public int blockSizing;
 
@@ -39,9 +38,7 @@ public class TextWithBlockComponent extends DescriptionComponent {
         if (!object.has("block"))
             throw new MissingJsonFieldException("JSON Object did not contain block parameter");
         text = object.get("text").getAsString();
-        Optional<Block> optionalBlock = Registries.BLOCK.getOrEmpty(Identifier.of(object.get("block").getAsString()));
-        if (optionalBlock.isPresent()) block = optionalBlock.get();
-        else throw new NullPointerException("Block returned null after parsing");
+        block = StarryExpressUtil.parseBlockStateFromJson(object.get("block"));
         try {
             textAlignment = Alignment.valueOf(object.get("text_alignment").getAsString());
         } catch (Exception e) {
@@ -70,11 +67,11 @@ public class TextWithBlockComponent extends DescriptionComponent {
         LabelComponent label = Components.label(parsedText).shadow(true).horizontalTextAlignment(HorizontalAlignment.LEFT);
         label.sizing(Sizing.expand(39), Sizing.content());
         if (textAlignment == Alignment.RIGHT) {
-            grid.child(Components.block(block.getDefaultState()).sizing(Sizing.fixed(blockSizing)), 0, 0);
+            grid.child(Components.block(block).tooltip(block.getBlock().asItem().getDefaultStack().getTooltip(Item.TooltipContext.DEFAULT, null, TooltipType.BASIC)).sizing(Sizing.fixed(blockSizing)), 0, 0);
             grid.child(label, 0, 1);
         } else {
             grid.child(label, 0, 0);
-            grid.child(Components.block(block.getDefaultState()).sizing(Sizing.fixed(blockSizing)), 0, 1);
+            grid.child(Components.block(block).tooltip(block.getBlock().asItem().getDefaultStack().getTooltip(Item.TooltipContext.DEFAULT, null, TooltipType.BASIC)).sizing(Sizing.fixed(blockSizing)), 0, 1);
         }
         return grid;
     }

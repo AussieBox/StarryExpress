@@ -1,6 +1,12 @@
 package org.aussiebox.starexpress.util;
 
+import com.google.gson.JsonElement;
+import com.mojang.serialization.JsonOps;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.MathHelper;
+import org.aussiebox.starexpress.StarryExpress;
 
 public class StarryExpressUtil {
 
@@ -20,6 +26,18 @@ public class StarryExpressUtil {
         int b = (int) MathHelper.lerp(delta, (float) b1, (float) b2);
 
         return (r << 16) | (g << 8) | b;
+    }
+
+    public static ItemStack parseItemStackFromJson(JsonElement jsonElement) {
+        return ItemStack.VALIDATED_CODEC.parse(JsonOps.INSTANCE, jsonElement)
+                .resultOrPartial(error -> StarryExpress.LOGGER.error("Failed to decode ItemStack: {}", error))
+                .orElse(ItemStack.EMPTY);
+    }
+
+    public static BlockState parseBlockStateFromJson(JsonElement jsonElement) {
+        return BlockState.CODEC.parse(JsonOps.INSTANCE, jsonElement)
+                .resultOrPartial(error -> StarryExpress.LOGGER.error("Failed to decode BlockState: {}", error))
+                .orElse(Blocks.AIR.getDefaultState());
     }
 
 }

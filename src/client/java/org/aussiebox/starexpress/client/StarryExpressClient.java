@@ -46,15 +46,12 @@ public class StarryExpressClient implements ClientModInitializer {
         BlockRenderLayerMap.INSTANCE.putBlocks(RenderLayer.getCutout(), ModBlocks.JADE_PLUSH);
         BlockEntityRendererFactories.register(ModBlockEntities.PLUSH, PlushBlockEntityRenderer::new);
 
-        if (FabricLoader.getInstance().isModLoaded("noellesroles")) {
-            abilityBind = NoellesrolesClient.abilityBind;
-        } else {
-            abilityBind = KeyBindingHelper.registerKeyBinding(new KeyBinding("key." + StarryExpress.MOD_ID + ".ability", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_G, "category.wathe.keybinds"));
-        }
+        abilityBind = KeyBindingHelper.registerKeyBinding(new KeyBinding("key." + StarryExpress.MOD_ID + ".ability", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_G, "category.wathe.keybinds"));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (abilityBind == null) return;
-            if (abilityBind.isPressed()) {
+            KeyBinding bind = getAbilityBind();
+            if (bind == null) return;
+            if (bind.isPressed()) {
                 client.execute(() -> {
                     if (MinecraftClient.getInstance().player == null) return;
                     GameWorldComponent gameWorldComponent = GameWorldComponent.KEY.get(MinecraftClient.getInstance().player.getWorld());
@@ -95,5 +92,15 @@ public class StarryExpressClient implements ClientModInitializer {
 
     public void registerParticles() {
         ParticleFactoryRegistry.getInstance().register(StarryExpress.STARSTRUCK_SPARKLE, StarstruckSparkleParticle.Provider::new);
+    }
+
+    public static KeyBinding getAbilityBind() {
+        if (abilityBind == null) return null;
+        KeyBinding bind = abilityBind;
+
+        if (FabricLoader.getInstance().isModLoaded("noellesroles")) bind = NoellesrolesClient.abilityBind;
+
+        if (bind == null) bind = abilityBind;
+        return bind;
     }
 }
