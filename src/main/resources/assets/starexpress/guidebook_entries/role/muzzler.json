@@ -5,7 +5,7 @@
     {
       "id": "text",
       "type": "text",
-      "text": "Normal text test"
+      "text": "Normal text test, now with variables: <var:starexpress:testvar>"
     },
     {
       "id": "textandimage",

@@ -27,6 +27,8 @@ import org.aussiebox.starexpress.block.ModBlocks;
 import org.aussiebox.starexpress.block.entity.ModBlockEntities;
 import org.aussiebox.starexpress.client.gui.screen.NewGuidebookScreen;
 import org.aussiebox.starexpress.client.guidebook.GuidebookEntryCollector;
+import org.aussiebox.starexpress.client.guidebook.variable.Variable;
+import org.aussiebox.starexpress.client.guidebook.variable.VariableHandler;
 import org.aussiebox.starexpress.client.particle.StarstruckSparkleParticle;
 import org.aussiebox.starexpress.client.render.blockentity.PlushBlockEntityRenderer;
 import org.aussiebox.starexpress.packet.AbilityC2SPacket;
@@ -77,6 +79,12 @@ public class StarryExpressClient implements ClientModInitializer {
         registerParticles();
 
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(GuidebookEntryCollector.INSTANCE);
+
+        Variable<Integer> variable = VariableHandler.registerVariable(StarryExpress.id("testvar"), 0, (value -> {
+            if (MinecraftClient.getInstance().player == null) return 0;
+            if (MinecraftClient.getInstance().player.hasPermissionLevel(2)) return 1;
+            return 0;
+        }));
     }
 
     public void registerPackets() {
