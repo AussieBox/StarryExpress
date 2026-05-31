@@ -1,6 +1,7 @@
 package org.aussiebox.starexpress.client.guidebook.variable;
 
 import lombok.Getter;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.StringIdentifiable;
 
@@ -54,6 +55,7 @@ public class Variable<V> {
     public enum VariableType implements StringIdentifiable {
         UNSUPPORTED("unsupported", null),
         STRING("string", String.class),
+        TEXT("text", Text.class),
         INTEGER("integer", Integer.class),
         DOUBLE("double", Double.class),
         FLOAT("float", Float.class),

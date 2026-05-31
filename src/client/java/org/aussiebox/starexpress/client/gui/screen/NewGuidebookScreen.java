@@ -28,10 +28,10 @@ import org.agmas.harpymodloader.config.HarpyModLoaderConfig;
 import org.agmas.harpymodloader.modifiers.Modifier;
 import org.aussiebox.starexpress.StarryExpress;
 import org.aussiebox.starexpress.client.gui.owo.TextureTitleCollapsibleContainer;
-import org.aussiebox.starexpress.client.guidebook.DescriptionComponent;
-import org.aussiebox.starexpress.client.guidebook.DescriptionComponentRegistry;
+import org.aussiebox.starexpress.client.guidebook.ElementRegistry;
 import org.aussiebox.starexpress.client.guidebook.GuidebookEntry;
 import org.aussiebox.starexpress.client.guidebook.GuidebookEntryCollector;
+import org.aussiebox.starexpress.client.guidebook.component.GuidebookElement;
 import org.jetbrains.annotations.NotNull;
 
 public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
@@ -56,7 +56,7 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
                 layout.alignment(HorizontalAlignment.LEFT, VerticalAlignment.TOP);
                 layout.margins(Insets.of(5, 5, 8, 8));
 
-                Text translated = DescriptionComponentRegistry.parseStringToContent(entry.title, false);
+                Text translated = ElementRegistry.parseStringToContent(entry.title, false);
                 Component textComponent = MiniMessage.miniMessage().deserialize(translated.getString());
                 String textJSON = GsonComponentSerializer.gson().serialize(textComponent);
                 MutableText parsedText = TextCodecs.CODEC
@@ -70,7 +70,7 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
                 layout.child(Components.label(parsedText).shadow(true).lineHeight(16).id("title"));
 
                 if (entry.subtitle.isPresent()) {
-                    translated = DescriptionComponentRegistry.parseStringToContent(entry.subtitle.get(), false);
+                    translated = ElementRegistry.parseStringToContent(entry.subtitle.get(), false);
                     textComponent = MiniMessage.miniMessage().deserialize(translated.getString());
                     textJSON = GsonComponentSerializer.gson().serialize(textComponent);
                     MutableText parsedText2 = TextCodecs.CODEC
@@ -85,11 +85,14 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
 
                 layout.child(Components.label(Text.of(" ")).id("title_spacing"));
 
-                for (DescriptionComponent component : entry.description) {
-                    layout.child(component.build().id(component.id));
-                }
+                for (GuidebookElement component : entry.description)
+                    if (component.build() != null) layout.child(component.build().id(component.id));
+
                 ScrollContainer<FlowLayout> container = Containers.verticalScroll(Sizing.expand(), Sizing.expand(), layout);
                 container.alignment(HorizontalAlignment.LEFT, VerticalAlignment.TOP);
+
+                root.child(container);
+                root.removeChild(container);
 
                 switch (entry.parentType) {
                     case GuidebookEntry.ParentType.ROLE -> roleEntryDescriptions.put(entry.parentRole.orElseThrow().identifier(), container);
@@ -127,7 +130,7 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
         CollapsibleContainer miscCategory = Containers.collapsible(Sizing.expand(), Sizing.content(), Text.translatable("guidebook.category.misc"), false);
 
         for (GuidebookEntry entry : GuidebookEntryCollector.guidebookEntries) {
-            Text translated = DescriptionComponentRegistry.parseStringToContent(entry.title, false);
+            Text translated = ElementRegistry.parseStringToContent(entry.title, false);
             Component textComponent = MiniMessage.miniMessage().deserialize(translated.getString()); // No <guidebook> tag for this one
             String textJSON = GsonComponentSerializer.gson().serialize(textComponent);
             MutableText parsedText = TextCodecs.CODEC

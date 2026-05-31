@@ -1,4 +1,4 @@
-package org.aussiebox.starexpress.client.guidebook.description;
+package org.aussiebox.starexpress.client.guidebook.component.description;
 
 import com.google.gson.JsonObject;
 import io.wispforest.owo.ui.component.Components;
@@ -8,17 +8,17 @@ import io.wispforest.owo.ui.core.HorizontalAlignment;
 import io.wispforest.owo.ui.core.Sizing;
 import io.wispforest.owo.ui.core.VerticalAlignment;
 import net.minecraft.util.Identifier;
-import org.aussiebox.starexpress.client.guidebook.DescriptionComponent;
+import org.aussiebox.starexpress.client.guidebook.component.DescriptionElement;
 import org.aussiebox.starexpress.exception.MissingJsonFieldException;
 
-public class TextureComponent extends DescriptionComponent {
+public class TextureElement extends DescriptionElement {
     public Identifier texture;
     public int width;
     public int height;
     public int regionWidth;
     public int regionHeight;
 
-    public TextureComponent(String id, JsonObject object) {
+    public TextureElement(String id, JsonObject object) {
         super(id, object);
         if (!object.has("texture"))
             throw new MissingJsonFieldException("JSON Object did not contain texture parameter");

@@ -1,4 +1,4 @@
-package org.aussiebox.starexpress.client.guidebook.description;
+package org.aussiebox.starexpress.client.guidebook.component.description;
 
 import com.google.gson.JsonObject;
 import io.wispforest.owo.ui.component.BoxComponent;
@@ -6,10 +6,10 @@ import io.wispforest.owo.ui.component.Components;
 import io.wispforest.owo.ui.container.Containers;
 import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.core.*;
-import org.aussiebox.starexpress.client.guidebook.DescriptionComponent;
+import org.aussiebox.starexpress.client.guidebook.component.DescriptionElement;
 
-public class SpacerComponent extends DescriptionComponent {
-    public SpacerComponent(String id, JsonObject object) {
+public class SpacerElement extends DescriptionElement {
+    public SpacerElement(String id, JsonObject object) {
         super(id, object);
     }
 

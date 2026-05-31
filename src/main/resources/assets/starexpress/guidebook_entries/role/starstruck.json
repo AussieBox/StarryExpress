@@ -1,0 +1,14 @@
+{
+  "title": "guidebook.role.starexpress:starstruck",
+  "subtitle": "Hello World!",
+  "keywords": [
+    "guidebook.starexpress.starstruck.keyword"
+  ],
+  "description": [
+    {
+      "id": "my_variable_line_of_text",
+      "type": "text",
+      "text": "This is my <var:mymod:adjective> line of text!"
+    }
+  ]
+}

@@ -44,6 +44,32 @@
       "item2": {
         "id": "minecraft:diamond_block"
       }
+    },
+    {
+      "id": "conditionaltest",
+      "type": "conditional_boolean",
+      "variable": "starexpress:is_operator",
+      "true": {
+        "id": "conditionaltest2",
+        "type": "conditional_string_contains",
+        "variable": "starexpress:yep",
+        "regex": "yup",
+        "true": {
+          "id": "conditional_true",
+          "type": "text",
+          "text": "You are DEFINITELY an operator!"
+        },
+        "false": {
+          "id": "conditional_definite_false",
+          "type": "text",
+          "text": "You are possibly not an operator..."
+        }
+      },
+      "false": {
+        "id": "conditional_false",
+        "type": "text",
+        "text": "You are NOT an operator..."
+      }
     }
   ]
 }

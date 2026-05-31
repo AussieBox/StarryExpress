@@ -1,4 +1,4 @@
-package org.aussiebox.starexpress.client.guidebook.description;
+package org.aussiebox.starexpress.client.guidebook.component.description;
 
 import com.google.gson.JsonObject;
 import dev.doctor4t.wathe.Wathe;
@@ -8,13 +8,13 @@ import io.wispforest.owo.ui.container.GridLayout;
 import io.wispforest.owo.ui.core.*;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.collection.DefaultedList;
-import org.aussiebox.starexpress.client.guidebook.DescriptionComponent;
+import org.aussiebox.starexpress.client.guidebook.component.DescriptionElement;
 import org.aussiebox.starexpress.util.StarryExpressUtil;
 
-public class HotbarComponent extends DescriptionComponent {
+public class HotbarElement extends DescriptionElement {
     public DefaultedList<ItemStack> items = DefaultedList.ofSize(9, ItemStack.EMPTY);
 
-    public HotbarComponent(String id, JsonObject object) {
+    public HotbarElement(String id, JsonObject object) {
         super(id, object);
         for (int i = 0; i < 9; i++) {
             if (!object.has("item" + i)) continue;

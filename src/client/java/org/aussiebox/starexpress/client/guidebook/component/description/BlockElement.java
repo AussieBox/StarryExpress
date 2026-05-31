@@ -1,4 +1,4 @@
-package org.aussiebox.starexpress.client.guidebook.description;
+package org.aussiebox.starexpress.client.guidebook.component.description;
 
 import com.google.gson.JsonObject;
 import io.wispforest.owo.ui.component.Components;
@@ -10,15 +10,15 @@ import io.wispforest.owo.ui.core.VerticalAlignment;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.Item;
 import net.minecraft.item.tooltip.TooltipType;
-import org.aussiebox.starexpress.client.guidebook.DescriptionComponent;
+import org.aussiebox.starexpress.client.guidebook.component.DescriptionElement;
 import org.aussiebox.starexpress.exception.MissingJsonFieldException;
 import org.aussiebox.starexpress.util.StarryExpressUtil;
 
-public class BlockComponent extends DescriptionComponent {
+public class BlockElement extends DescriptionElement {
     public BlockState block;
     public int blockSizing;
 
-    public BlockComponent(String id, JsonObject object) {
+    public BlockElement(String id, JsonObject object) {
         super(id, object);
         if (!object.has("block"))
             throw new MissingJsonFieldException("JSON Object did not contain block parameter");

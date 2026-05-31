@@ -1,4 +1,4 @@
-package org.aussiebox.starexpress.client.guidebook.description;
+package org.aussiebox.starexpress.client.guidebook.component.description;
 
 import com.google.gson.JsonObject;
 import io.wispforest.owo.ui.component.Components;
@@ -8,15 +8,15 @@ import io.wispforest.owo.ui.core.HorizontalAlignment;
 import io.wispforest.owo.ui.core.Sizing;
 import io.wispforest.owo.ui.core.VerticalAlignment;
 import net.minecraft.item.ItemStack;
-import org.aussiebox.starexpress.client.guidebook.DescriptionComponent;
+import org.aussiebox.starexpress.client.guidebook.component.DescriptionElement;
 import org.aussiebox.starexpress.exception.MissingJsonFieldException;
 import org.aussiebox.starexpress.util.StarryExpressUtil;
 
-public class ItemComponent extends DescriptionComponent {
+public class ItemElement extends DescriptionElement {
     public ItemStack item;
     public int itemSizing;
 
-    public ItemComponent(String id, JsonObject object) {
+    public ItemElement(String id, JsonObject object) {
         super(id, object);
         if (!object.has("item"))
             throw new MissingJsonFieldException("JSON Object did not contain item parameter");

@@ -1,17 +1,12 @@
-package org.aussiebox.starexpress.client.guidebook;
+package org.aussiebox.starexpress.client.guidebook.component;
 
 import com.google.gson.JsonObject;
-import io.wispforest.owo.ui.core.Component;
 import net.minecraft.util.StringIdentifiable;
 
-public abstract class DescriptionComponent {
-    public final String id;
-
-    public DescriptionComponent(String id, JsonObject object) {
-        this.id = id;
+public abstract class DescriptionElement extends GuidebookElement {
+    public DescriptionElement(String id, JsonObject object) {
+        super(id, object);
     }
-
-    public abstract Component build();
 
     public enum Alignment implements StringIdentifiable {
         LEFT("left"),

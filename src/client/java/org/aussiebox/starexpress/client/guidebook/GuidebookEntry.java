@@ -5,6 +5,7 @@ import net.minecraft.item.Item;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.StringIdentifiable;
 import org.agmas.harpymodloader.modifiers.Modifier;
+import org.aussiebox.starexpress.client.guidebook.component.GuidebookElement;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -19,9 +20,9 @@ public class GuidebookEntry {
     public final Optional<String> parentMisc;
     public final ParentType parentType;
     public List<String> keywords;
-    public List<? extends DescriptionComponent> description;
+    public List<? extends GuidebookElement> description;
 
-    public GuidebookEntry(Object object, String title, @Nullable String subtitle, List<String> keywords, List<? extends DescriptionComponent> description) {
+    public GuidebookEntry(Object object, String title, @Nullable String subtitle, List<String> keywords, List<? extends GuidebookElement> description) {
         this.title = title;
         this.subtitle = subtitle != null ? subtitle.describeConstable() : Optional.empty();
         this.keywords = keywords;

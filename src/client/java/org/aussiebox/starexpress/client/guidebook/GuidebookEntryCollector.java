@@ -19,9 +19,13 @@ import org.agmas.harpymodloader.modifiers.HMLModifiers;
 import org.agmas.harpymodloader.modifiers.Modifier;
 import org.apache.logging.log4j.util.Strings;
 import org.aussiebox.starexpress.StarryExpress;
+import org.aussiebox.starexpress.client.guidebook.component.ConditionalElement;
+import org.aussiebox.starexpress.client.guidebook.component.DescriptionElement;
+import org.aussiebox.starexpress.client.guidebook.component.GuidebookElement;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -116,7 +120,7 @@ public class GuidebookEntryCollector implements SimpleSynchronousResourceReloadL
                 } else StarryExpress.LOGGER.warn("Guidebook entry {} does not have any keywords, and will not be mentionable in other entries", id);
 
                 ///  Fetch Description
-                List<DescriptionComponent> description = new ArrayList<>();
+                List<GuidebookElement> description = new ArrayList<>();
                 if (jsonObject.has("description")) {
                     if (!jsonObject.get("description").isJsonArray()) {
                         StarryExpress.LOGGER.error("Description of guidebook entry {} is not an array, ignoring", id);
@@ -126,30 +130,17 @@ public class GuidebookEntryCollector implements SimpleSynchronousResourceReloadL
                     JsonArray descArray = jsonObject.getAsJsonArray("description");
                     for (JsonElement element : descArray.asList()) {
                         if (!element.isJsonObject()) {
-                            StarryExpress.LOGGER.error("Element in description of guidebook entry {} is not an parent, ignoring", id);
+                            StarryExpress.LOGGER.error("Element in description of guidebook entry {} is not an object, ignoring", id);
                             fails++;
                             continue entry;
                         }
                         JsonObject object = element.getAsJsonObject();
-                        if (!object.has("id")) {
-                            StarryExpress.LOGGER.error("Element in description of guidebook entry {} does not have an id, ignoring", id);
+                        GuidebookElement component = parseComponentFromJson(object);
+                        if (component == null) {
+                            StarryExpress.LOGGER.error("Element in description of guidebook entry {} could not be parsed, ignoring", id);
                             fails++;
                             continue entry;
                         }
-                        String objectID = object.get("id").getAsString();
-                        if (!object.has("type")) {
-                            StarryExpress.LOGGER.error("Element in description of guidebook entry {} does not have a type, ignoring", id);
-                            fails++;
-                            continue entry;
-                        }
-                        String type = object.get("type").getAsString();
-                        if (!DescriptionComponentRegistry.getMap().containsKey(type)) {
-                            StarryExpress.LOGGER.error("Type of element in description of guidebook entry {} is invalid, ignoring", id);
-                            fails++;
-                            continue entry;
-                        }
-                        Class<? extends DescriptionComponent> clazz = DescriptionComponentRegistry.getMap().get(type);
-                        DescriptionComponent component = clazz.getConstructor(String.class, JsonObject.class).newInstance(objectID, object);
                         description.add(component);
                     }
                 } else {
@@ -166,5 +157,41 @@ public class GuidebookEntryCollector implements SimpleSynchronousResourceReloadL
 
         StarryExpress.LOGGER.info("Successfully loaded {} guidebook entries", guidebookEntries.size());
         if (fails > 0) StarryExpress.LOGGER.error("{} guidebook entries failed to load. If this is a development environment, please review associated JSON files.", fails);
+    }
+
+    public static GuidebookElement parseComponentFromJson(JsonObject object) {
+        if (!object.has("id")) {
+            StarryExpress.LOGGER.error("Failed to parse element: No id could be found");
+            return null;
+        }
+        if (!object.has("type")) {
+            StarryExpress.LOGGER.error("Failed to parse element: No type could be found");
+            return null;
+        }
+        String objectID = object.get("id").getAsString();
+        String type = object.get("type").getAsString();
+        if (!ElementRegistry.getDescriptionMap().containsKey(type)) {
+            if (ElementRegistry.getConditionalMap().containsKey(type)) {
+                try {
+                    Class<? extends ConditionalElement> clazz = ElementRegistry.getConditionalMap().get(type);
+                    return clazz.getConstructor(String.class, JsonObject.class).newInstance(objectID, object);
+                } catch (Exception e) {
+                    if (e instanceof InvocationTargetException invocation) StarryExpress.LOGGER.error("Failed to parse conditional: {}", invocation.getTargetException().toString());
+                    else StarryExpress.LOGGER.error("Failed to parse conditional: {}", e.toString());
+                    return null;
+                }
+            } else {
+                StarryExpress.LOGGER.error("Failed to parse element: Invalid type");
+                return null;
+            }
+        }
+        try {
+            Class<? extends DescriptionElement> clazz = ElementRegistry.getDescriptionMap().get(type);
+            return clazz.getConstructor(String.class, JsonObject.class).newInstance(objectID, object);
+        } catch (Exception e) {
+            if (e instanceof InvocationTargetException invocation) StarryExpress.LOGGER.error("Failed to parse element: {}", invocation.getTargetException().toString());
+            else StarryExpress.LOGGER.error("Failed to parse element: {}", e.toString());
+            return null;
+        }
     }
 }

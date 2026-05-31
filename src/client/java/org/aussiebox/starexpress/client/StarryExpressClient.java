@@ -20,6 +20,7 @@ import net.minecraft.client.render.block.entity.BlockEntityRendererFactories;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.resource.ResourceType;
+import net.minecraft.text.Text;
 import org.agmas.noellesroles.client.NoellesrolesClient;
 import org.aussiebox.starexpress.StarryExpress;
 import org.aussiebox.starexpress.StarryExpressRoles;
@@ -80,11 +81,11 @@ public class StarryExpressClient implements ClientModInitializer {
 
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(GuidebookEntryCollector.INSTANCE);
 
-        Variable<Integer> variable = VariableHandler.registerVariable(StarryExpress.id("testvar"), 0, (value -> {
-            if (MinecraftClient.getInstance().player == null) return 0;
-            if (MinecraftClient.getInstance().player.hasPermissionLevel(2)) return 1;
-            return 0;
+        Variable<Boolean> isOperator = VariableHandler.registerVariable(StarryExpress.id("is_operator"), false, (value -> {
+            if (MinecraftClient.getInstance().player == null) return false;
+            return MinecraftClient.getInstance().player.hasPermissionLevel(2);
         }));
+        Variable<Text> yep = VariableHandler.registerVariable(StarryExpress.id("yep"), Text.of("yup"));
     }
 
     public void registerPackets() {
