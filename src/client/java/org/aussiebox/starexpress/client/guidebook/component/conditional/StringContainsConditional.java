@@ -2,7 +2,6 @@ package org.aussiebox.starexpress.client.guidebook.component.conditional;
 
 import com.google.gson.JsonObject;
 import net.minecraft.text.Text;
-import org.aussiebox.starexpress.StarryExpress;
 import org.aussiebox.starexpress.client.guidebook.component.ConditionalElement;
 import org.aussiebox.starexpress.client.guidebook.variable.Variable;
 import org.aussiebox.starexpress.exception.MissingJsonFieldException;
@@ -33,7 +32,6 @@ public class StringContainsConditional extends ConditionalElement {
 
     @Override
     public JsonObject evaluate() {
-        StarryExpress.LOGGER.info("evaluating");
         if (getVariable().get() instanceof Text text) return text.getString().contains(matchWith) ? this.output1 : this.output2;
         else return ((String) getVariable().get()).contains(matchWith) ? this.output1 : this.output2;
     }

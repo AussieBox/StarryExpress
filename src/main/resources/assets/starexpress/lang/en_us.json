@@ -1,8 +1,8 @@
 {
-  "test.text.normal": "Normal translation test",
-  "test.text.minimessage": "<rainbow>MiniMessage translation test (tape!)",
-
+  "title.starexpress.tape": "<#939696>Tape",
   "keyword.starexpress.tape.tape": "tape",
+  "description.starexpress.tape.role": "<gray>Exclusive to the Muzzler",
+  "description.starexpress.tape": "Right-clicking a player with tape",
 
   "key.starexpress.ability": "Ability",
   "tip.starexpress.cooldown": "Ability usable in %ss",

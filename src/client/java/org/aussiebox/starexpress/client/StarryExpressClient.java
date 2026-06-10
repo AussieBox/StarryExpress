@@ -20,7 +20,6 @@ import net.minecraft.client.render.block.entity.BlockEntityRendererFactories;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.resource.ResourceType;
-import net.minecraft.text.Text;
 import org.agmas.noellesroles.client.NoellesrolesClient;
 import org.aussiebox.starexpress.StarryExpress;
 import org.aussiebox.starexpress.StarryExpressRoles;
@@ -28,8 +27,7 @@ import org.aussiebox.starexpress.block.ModBlocks;
 import org.aussiebox.starexpress.block.entity.ModBlockEntities;
 import org.aussiebox.starexpress.client.gui.screen.NewGuidebookScreen;
 import org.aussiebox.starexpress.client.guidebook.GuidebookEntryCollector;
-import org.aussiebox.starexpress.client.guidebook.variable.Variable;
-import org.aussiebox.starexpress.client.guidebook.variable.VariableHandler;
+import org.aussiebox.starexpress.client.guidebook.variable.Variables;
 import org.aussiebox.starexpress.client.particle.StarstruckSparkleParticle;
 import org.aussiebox.starexpress.client.render.blockentity.PlushBlockEntityRenderer;
 import org.aussiebox.starexpress.packet.AbilityC2SPacket;
@@ -78,14 +76,9 @@ public class StarryExpressClient implements ClientModInitializer {
 
         registerPackets();
         registerParticles();
+        Variables.init();
 
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(GuidebookEntryCollector.INSTANCE);
-
-        Variable<Boolean> isOperator = VariableHandler.registerVariable(StarryExpress.id("is_operator"), false, (value -> {
-            if (MinecraftClient.getInstance().player == null) return false;
-            return MinecraftClient.getInstance().player.hasPermissionLevel(2);
-        }));
-        Variable<Text> yep = VariableHandler.registerVariable(StarryExpress.id("yep"), Text.of("yup"));
     }
 
     public void registerPackets() {
