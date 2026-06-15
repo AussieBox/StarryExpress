@@ -19,6 +19,8 @@ import org.agmas.harpymodloader.modifiers.HMLModifiers;
 import org.agmas.harpymodloader.modifiers.Modifier;
 import org.apache.logging.log4j.util.Strings;
 import org.aussiebox.starexpress.StarryExpress;
+import org.aussiebox.starexpress.client.StarryExpressClient;
+import org.aussiebox.starexpress.client.gui.screen.NewGuidebookScreen;
 import org.aussiebox.starexpress.client.guidebook.component.ConditionalElement;
 import org.aussiebox.starexpress.client.guidebook.component.DescriptionElement;
 import org.aussiebox.starexpress.client.guidebook.component.GuidebookElement;
@@ -154,6 +156,8 @@ public class GuidebookEntryCollector implements SimpleSynchronousResourceReloadL
                 StarryExpress.LOGGER.error("Error occurred while loading guidebook entry {}", id, e);
             }
         }
+
+        StarryExpressClient.SCREEN_INSTANCE = new NewGuidebookScreen();
 
         StarryExpress.LOGGER.info("Successfully loaded {} guidebook entries", guidebookEntries.size());
         if (fails > 0) StarryExpress.LOGGER.error("{} guidebook entries failed to load. If this is a development environment, please review associated JSON files.", fails);

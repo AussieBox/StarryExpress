@@ -39,7 +39,7 @@ public class StarryExpressClient implements ClientModInitializer {
     public static PlayerEntity target;
     public static KeyBinding abilityBind;
 
-    public NewGuidebookScreen SCREEN_INSTANCE = new NewGuidebookScreen();
+    public static NewGuidebookScreen SCREEN_INSTANCE;
 
     @Override
     public void onInitializeClient() {
@@ -48,6 +48,8 @@ public class StarryExpressClient implements ClientModInitializer {
         BlockEntityRendererFactories.register(ModBlockEntities.PLUSH, PlushBlockEntityRenderer::new);
 
         abilityBind = KeyBindingHelper.registerKeyBinding(new KeyBinding("key." + StarryExpress.MOD_ID + ".ability", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_G, "category.wathe.keybinds"));
+
+        SCREEN_INSTANCE = new NewGuidebookScreen();
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             KeyBinding bind = getAbilityBind();

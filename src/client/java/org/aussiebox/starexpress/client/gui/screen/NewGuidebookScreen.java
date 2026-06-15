@@ -8,12 +8,12 @@ import io.wispforest.owo.ui.base.BaseOwoScreen;
 import io.wispforest.owo.ui.component.ButtonComponent;
 import io.wispforest.owo.ui.component.Components;
 import io.wispforest.owo.ui.component.LabelComponent;
+import io.wispforest.owo.ui.component.TextBoxComponent;
 import io.wispforest.owo.ui.container.CollapsibleContainer;
 import io.wispforest.owo.ui.container.Containers;
 import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.container.ScrollContainer;
 import io.wispforest.owo.ui.core.*;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -35,8 +35,9 @@ import org.aussiebox.starexpress.client.guidebook.component.GuidebookElement;
 import org.jetbrains.annotations.NotNull;
 
 public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
-    public static ScrollContainer<FlowLayout> displayedEntry = Containers.verticalScroll(Sizing.expand(), Sizing.expand(), Containers.verticalFlow(Sizing.expand(), Sizing.expand()));
-    public static FlowLayout root;
+    public ScrollContainer<FlowLayout> displayedEntry;
+    public FlowLayout entryBrowser;
+    public FlowLayout root;
 
     @Override
     protected @NotNull OwoUIAdapter<FlowLayout> createAdapter() {
@@ -45,80 +46,19 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
 
     @Override
     protected void build(FlowLayout root) {
-        if (GuidebookEntryCollector.guidebookEntryCategories.isEmpty()) {
-            Object2ObjectOpenHashMap<Identifier, ScrollContainer<FlowLayout>> roleEntryDescriptions = new Object2ObjectOpenHashMap<>();
-            Object2ObjectOpenHashMap<Identifier, ScrollContainer<FlowLayout>> modifierEntryDescriptions = new Object2ObjectOpenHashMap<>();
-            Object2ObjectOpenHashMap<Identifier, ScrollContainer<FlowLayout>> itemEntryDescriptions = new Object2ObjectOpenHashMap<>();
-            Object2ObjectOpenHashMap<Identifier, ScrollContainer<FlowLayout>> miscEntryDescriptions = new Object2ObjectOpenHashMap<>();
-
-            for (GuidebookEntry entry : GuidebookEntryCollector.guidebookEntries) {
-                FlowLayout layout = Containers.verticalFlow(Sizing.expand(), Sizing.expand());
-                layout.alignment(HorizontalAlignment.LEFT, VerticalAlignment.TOP);
-                layout.margins(Insets.of(5, 5, 8, 8));
-
-                Text translated = ElementRegistry.parseStringToContent(entry.title, false);
-                Component textComponent = MiniMessage.miniMessage().deserialize(translated.getString());
-                String textJSON = GsonComponentSerializer.gson().serialize(textComponent);
-                MutableText parsedText = TextCodecs.CODEC
-                        .decode(JsonOps.INSTANCE, new Gson().fromJson(textJSON, JsonElement.class))
-                        .getOrThrow()
-                        .getFirst()
-                        .copy();
-
-                parsedText.setStyle(parsedText.getStyle().withFont(StarryExpress.id("guidebook_heading")));
-                entry.parentRole.ifPresent(role -> parsedText.withColor(role.color()));
-                layout.child(Components.label(parsedText).shadow(true).lineHeight(16).id("title"));
-
-                if (entry.subtitle.isPresent()) {
-                    translated = ElementRegistry.parseStringToContent(entry.subtitle.get(), false);
-                    textComponent = MiniMessage.miniMessage().deserialize(translated.getString());
-                    textJSON = GsonComponentSerializer.gson().serialize(textComponent);
-                    MutableText parsedText2 = TextCodecs.CODEC
-                            .decode(JsonOps.INSTANCE, new Gson().fromJson(textJSON, JsonElement.class))
-                            .getOrThrow()
-                            .getFirst()
-                            .copy();
-
-                    entry.parentRole.ifPresent(role -> parsedText2.withColor(role.color()));
-                    layout.child(Components.label(parsedText2).shadow(true).id("subtitle"));
-                }
-
-                layout.child(Components.label(Text.of(" ")).id("title_spacing"));
-
-                for (GuidebookElement component : entry.description)
-                    if (component.build() != null) layout.child(component.build().id(component.id));
-
-                ScrollContainer<FlowLayout> container = Containers.verticalScroll(Sizing.expand(), Sizing.expand(), layout);
-                container.alignment(HorizontalAlignment.LEFT, VerticalAlignment.TOP);
-
-                root.child(container);
-                root.removeChild(container);
-
-                switch (entry.parentType) {
-                    case GuidebookEntry.ParentType.ROLE -> roleEntryDescriptions.put(entry.parentRole.orElseThrow().identifier(), container);
-                    case GuidebookEntry.ParentType.MODIFIER -> modifierEntryDescriptions.put(entry.parentModifier.orElseThrow().identifier(), container);
-                    case GuidebookEntry.ParentType.ITEM -> itemEntryDescriptions.put(Identifier.of(entry.parentItem.orElseThrow().toString()), container);
-                    case GuidebookEntry.ParentType.MISC -> miscEntryDescriptions.put(Identifier.of(entry.parentMisc.orElseThrow()), container);
-                    default -> throw new IllegalArgumentException("Guidebook entry was not parented to valid type");
-                }
-            }
-
-            GuidebookEntryCollector.guidebookEntryCategories.put(GuidebookEntry.ParentType.ROLE, roleEntryDescriptions);
-            GuidebookEntryCollector.guidebookEntryCategories.put(GuidebookEntry.ParentType.MODIFIER, modifierEntryDescriptions);
-            GuidebookEntryCollector.guidebookEntryCategories.put(GuidebookEntry.ParentType.ITEM, itemEntryDescriptions);
-            GuidebookEntryCollector.guidebookEntryCategories.put(GuidebookEntry.ParentType.MISC, miscEntryDescriptions);
-        }
+        displayedEntry = Containers.verticalScroll(Sizing.expand(), Sizing.expand(), Containers.verticalFlow(Sizing.expand(), Sizing.expand())).scrollbar(ScrollContainer.Scrollbar.flat(Color.WHITE)).scrollbarThiccness(1).scrollStep(12);
+        entryBrowser = Containers.verticalFlow(Sizing.expand(40), Sizing.expand());
 
         root.child(updateEntryBrowser(root));
         root.child(Components.box(Sizing.fixed(1), Sizing.expand()).color(Color.ofArgb(0x33FFFFFF)));
         root.child(displayedEntry.id("displayed_entry"));
         root.surface(Surface.VANILLA_TRANSLUCENT);
 
-        NewGuidebookScreen.root = root;
+        this.root = root;
     }
 
-    public ScrollContainer<FlowLayout> entryBrowser;
-    public ScrollContainer<FlowLayout> updateEntryBrowser(FlowLayout root) {
+    public FlowLayout updateEntryBrowser(FlowLayout root) {
+        entryBrowser.clearChildren();
         FlowLayout flow = Containers.verticalFlow(Sizing.expand(), Sizing.content());
 
         TextureTitleCollapsibleContainer rolesCategory = new TextureTitleCollapsibleContainer(Sizing.expand(), Sizing.content(), Text.translatable("guidebook.category.roles"), StarryExpress.id("textures/gui/sprites/hud/starstruck/ability_happy.png"), 14, 17, true);
@@ -128,6 +68,14 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
         TextureTitleCollapsibleContainer modifiersCategory = new TextureTitleCollapsibleContainer(Sizing.expand(), Sizing.content(), Text.translatable("guidebook.category.modifiers"), Identifier.of("wathe", "textures/gui/sprites/hud/arrow_up.png"), 10, 13, false);
         TextureTitleCollapsibleContainer itemsCategory = new TextureTitleCollapsibleContainer(Sizing.expand(), Sizing.content(), Text.translatable("guidebook.category.items"), Identifier.of("wathe", "textures/item/bat.png"), 16, 16, false);
         CollapsibleContainer miscCategory = Containers.collapsible(Sizing.expand(), Sizing.content(), Text.translatable("guidebook.category.misc"), false);
+
+        rolesCategory.onToggled().subscribe((nowExpanded -> this.uiAdapter.inflateAndMount()));
+        goodRolesCategory.onToggled().subscribe((nowExpanded -> this.uiAdapter.inflateAndMount()));
+        neutralRolesCategory.onToggled().subscribe((nowExpanded -> this.uiAdapter.inflateAndMount()));
+        evilRolesCategory.onToggled().subscribe((nowExpanded -> this.uiAdapter.inflateAndMount()));
+        modifiersCategory.onToggled().subscribe((nowExpanded -> this.uiAdapter.inflateAndMount()));
+        itemsCategory.onToggled().subscribe((nowExpanded -> this.uiAdapter.inflateAndMount()));
+        miscCategory.onToggled().subscribe((nowExpanded -> this.uiAdapter.inflateAndMount()));
 
         for (GuidebookEntry entry : GuidebookEntryCollector.guidebookEntries) {
             Text translated = ElementRegistry.parseStringToContent(entry.title, false);
@@ -179,57 +127,32 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
         flow.child(modifiersCategory);
         flow.child(itemsCategory);
         flow.child(miscCategory);
-        return entryBrowser = Containers.verticalScroll(Sizing.expand(40), Sizing.expand(), flow)
+        flow.padding(Insets.bottom(5));
+
+        TextBoxComponent search = Components.textBox(Sizing.expand(90));
+        search.margins(Insets.top(5));
+        search.setMaxLength(1000);
+        search.setPlaceholder(Text.translatable("tip.starexpress.search").withColor(0xAAAAAA));
+
+        ScrollContainer<FlowLayout> categories = Containers.verticalScroll(Sizing.expand(), Sizing.expand(85), flow)
                 .scrollbar(ScrollContainer.Scrollbar.flat(Color.WHITE))
                 .scrollbarThiccness(1)
                 .scrollStep(12);
+
+        entryBrowser.child(search.id("search"));
+        entryBrowser.child(categories.id("entry_categories"));
+        entryBrowser.alignment(HorizontalAlignment.CENTER, VerticalAlignment.TOP);
+
+        return entryBrowser;
     }
 
-    public static void setDisplayedEntry(GuidebookEntry entry, FlowLayout root) {
-        root.removeChild(displayedEntry);
-        update:
-        for (Object2ObjectOpenHashMap<Identifier, ScrollContainer<FlowLayout>> descriptions : GuidebookEntryCollector.guidebookEntryCategories.values()) {
-            for (Identifier key : descriptions.keySet()) {
-                switch (entry.parentType) {
-                    case ROLE -> {
-                        if (entry.parentRole.isEmpty()) continue;
-                        if (key.equals(entry.parentRole.get().identifier())) {
-                            ScrollContainer<FlowLayout> container = descriptions.get((key));
-                            updateRoleFlags(container, entry.parentRole.get());
-                            displayedEntry = container;
-                            break update;
-                        }
-                    }
-                    case MODIFIER -> {
-                        if (entry.parentModifier.isEmpty()) continue;
-                        if (key.equals(entry.parentModifier.get().identifier())) {
-                            ScrollContainer<FlowLayout> container = descriptions.get(key);
-                            updateModifierFlags(container, entry.parentModifier.get());
-                            displayedEntry = container;
-                            break update;
-                        }
-                    }
-                    case ITEM -> {
-                        if (entry.parentItem.isEmpty()) continue;
-                        if (key.equals(Identifier.of(entry.parentItem.get().toString()))) {
-                            displayedEntry = descriptions.get(key);
-                            break update;
-                        }
-                    }
-                    case MISC -> {
-                        if (entry.parentMisc.isEmpty()) continue;
-                        if (key.equals(Identifier.of(entry.parentMisc.get()))) {
-                            displayedEntry = descriptions.get(key);
-                            break update;
-                        }
-                    }
-                }
-            }
-        }
-        root.child(displayedEntry);
+    public void setDisplayedEntry(GuidebookEntry entry, FlowLayout root) {
+        buildDescription(displayedEntry, entry);
+        entry.parentRole.ifPresent(role -> updateRoleFlags(displayedEntry, role));
+        entry.parentModifier.ifPresent(modifier -> updateModifierFlags(displayedEntry, modifier));
     }
 
-    public static void updateRoleFlags(ScrollContainer<FlowLayout> container, Role parent) {
+    public void updateRoleFlags(ScrollContainer<FlowLayout> container, Role parent) {
         int index = container.child().children().indexOf(container.child().childById(FlowLayout.class, "flags"));
         container.child().removeChild(container.childById(FlowLayout.class, "flags"));
         FlowLayout flags = Containers.horizontalFlow(Sizing.expand(), Sizing.content());
@@ -253,7 +176,7 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
         container.child().child(index, flags.id("flags"));
     }
 
-    public static void updateModifierFlags(ScrollContainer<FlowLayout> container, Modifier parent) {
+    public void updateModifierFlags(ScrollContainer<FlowLayout> container, Modifier parent) {
         int index = container.child().children().indexOf(container.child().childById(FlowLayout.class, "flags"));
         container.child().removeChild(container.childById(FlowLayout.class, "flags"));
         FlowLayout flags = Containers.horizontalFlow(Sizing.expand(), Sizing.content());
@@ -277,7 +200,47 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
         container.child().child(index, flags.id("flags"));
     }
 
-    public static void clickHyperlink(Identifier targetEntry) {
+    public void buildDescription(ScrollContainer<FlowLayout> modify, GuidebookEntry entry) {
+        modify.child().clearChildren();
+        modify.child().alignment(HorizontalAlignment.LEFT, VerticalAlignment.TOP);
+        modify.child().margins(Insets.of(5, 5, 8, 8));
+
+        Text translated = ElementRegistry.parseStringToContent(entry.title, false);
+        Component textComponent = MiniMessage.miniMessage().deserialize(translated.getString());
+        String textJSON = GsonComponentSerializer.gson().serialize(textComponent);
+        MutableText parsedText = TextCodecs.CODEC
+                .decode(JsonOps.INSTANCE, new Gson().fromJson(textJSON, JsonElement.class))
+                .getOrThrow()
+                .getFirst()
+                .copy();
+
+        parsedText.setStyle(parsedText.getStyle().withFont(StarryExpress.id("guidebook_heading")));
+        entry.parentRole.ifPresent(role -> parsedText.withColor(role.color()));
+        modify.child().child(Components.label(parsedText).shadow(true).lineHeight(16).id("title"));
+
+        if (entry.subtitle.isPresent()) {
+            translated = ElementRegistry.parseStringToContent(entry.subtitle.get(), false);
+            textComponent = MiniMessage.miniMessage().deserialize(translated.getString());
+            textJSON = GsonComponentSerializer.gson().serialize(textComponent);
+            MutableText parsedText2 = TextCodecs.CODEC
+                    .decode(JsonOps.INSTANCE, new Gson().fromJson(textJSON, JsonElement.class))
+                    .getOrThrow()
+                    .getFirst()
+                    .copy();
+
+            entry.parentRole.ifPresent(role -> parsedText2.withColor(role.color()));
+            modify.child().child(Components.label(parsedText2).shadow(true).id("subtitle"));
+        }
+
+        modify.child().child(Components.label(Text.of(" ")).id("title_spacing"));
+
+        for (GuidebookElement component : entry.description)
+            if (component.build() != null) modify.child().child(component.build().id(component.id));
+
+        modify.alignment(HorizontalAlignment.LEFT, VerticalAlignment.TOP);
+    }
+
+    public void clickHyperlink(Identifier targetEntry) {
         for (GuidebookEntry entry : GuidebookEntryCollector.guidebookEntries) {
             if (entry.getId().equals(targetEntry)) {
                 setDisplayedEntry(entry, root);
