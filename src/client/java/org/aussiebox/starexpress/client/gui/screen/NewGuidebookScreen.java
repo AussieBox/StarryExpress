@@ -5,10 +5,7 @@ import com.google.gson.JsonElement;
 import com.mojang.serialization.JsonOps;
 import dev.doctor4t.wathe.api.Role;
 import io.wispforest.owo.ui.base.BaseOwoScreen;
-import io.wispforest.owo.ui.component.ButtonComponent;
-import io.wispforest.owo.ui.component.Components;
-import io.wispforest.owo.ui.component.LabelComponent;
-import io.wispforest.owo.ui.component.TextBoxComponent;
+import io.wispforest.owo.ui.component.*;
 import io.wispforest.owo.ui.container.CollapsibleContainer;
 import io.wispforest.owo.ui.container.Containers;
 import io.wispforest.owo.ui.container.FlowLayout;
@@ -27,6 +24,7 @@ import net.minecraft.util.Language;
 import org.agmas.harpymodloader.config.HarpyModLoaderConfig;
 import org.agmas.harpymodloader.modifiers.Modifier;
 import org.aussiebox.starexpress.StarryExpress;
+import org.aussiebox.starexpress.client.gui.owo.CollapsibleTextBoxComponent;
 import org.aussiebox.starexpress.client.gui.owo.TextureTitleCollapsibleContainer;
 import org.aussiebox.starexpress.client.guidebook.ElementRegistry;
 import org.aussiebox.starexpress.client.guidebook.GuidebookEntry;
@@ -38,6 +36,10 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
     public ScrollContainer<FlowLayout> displayedEntry;
     public FlowLayout entryBrowser;
     public FlowLayout root;
+
+    public String search = "";
+    public boolean showDisabled = false;
+    public boolean searchByNamespace = false;
 
     @Override
     protected @NotNull OwoUIAdapter<FlowLayout> createAdapter() {
@@ -90,7 +92,7 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
             ButtonComponent button = Components.button(
                     parsedText.withColor(0xFFFFFF).append("                                                                                         "),
                     buttonComponent -> {
-                        setDisplayedEntry(entry, root);
+                        setDisplayedEntry(entry);
                     }
             ).renderer(ButtonComponent.Renderer.texture(StarryExpress.id("textures/empty.png"), 0, 0, 1, 1));
 
@@ -129,24 +131,42 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
         flow.child(miscCategory);
         flow.padding(Insets.bottom(5));
 
-        TextBoxComponent search = Components.textBox(Sizing.expand(90));
-        search.margins(Insets.top(5));
-        search.setMaxLength(1000);
-        search.setPlaceholder(Text.translatable("tip.starexpress.search").withColor(0xAAAAAA));
+        TextBoxComponent searchBox = Components.textBox(Sizing.expand());
+        searchBox.margins(Insets.top(5));
+        searchBox.setMaxLength(1000);
+        searchBox.setPlaceholder(Text.translatable("tip.starexpress.search").withColor(0xAAAAAA));
+        searchBox.onChanged().subscribe((value -> {
+            this.search = value;
+        }));
 
-        ScrollContainer<FlowLayout> categories = Containers.verticalScroll(Sizing.expand(), Sizing.expand(85), flow)
-                .scrollbar(ScrollContainer.Scrollbar.flat(Color.WHITE))
-                .scrollbarThiccness(1)
-                .scrollStep(12);
+        CollapsibleTextBoxComponent search = new CollapsibleTextBoxComponent(Sizing.expand(90), Sizing.content(), searchBox, false);
 
-        entryBrowser.child(search.id("search"));
+        DropdownComponent dropdown = Components.dropdown(Sizing.expand()).text(Text.translatable("search.starexpress.options"));
+        dropdown.checkbox(Text.translatable("search.starexpress.show_disabled"), showDisabled, (checked -> {
+            this.showDisabled = checked;
+        }));
+        dropdown.checkbox(Text.translatable("search.starexpress.namespace"), searchByNamespace, (checked -> {
+            this.searchByNamespace = checked;
+        }));
+
+        search.child(dropdown);
+
+        ScrollContainer<FlowLayout> categories = new ScrollContainer<>(ScrollContainer.ScrollDirection.VERTICAL, Sizing.expand(), Sizing.expand(85), flow) {
+            @Override
+            public boolean isInBoundingBox(double x, double y) {
+                if (search.isInBoundingBox(x, y)) return false;
+                return super.isInBoundingBox(x, y);
+            }
+        }.scrollbar(ScrollContainer.Scrollbar.flat(Color.WHITE)).scrollbarThiccness(1).scrollStep(12);
+
+        entryBrowser.child(search.id("search").zIndex(1000));
         entryBrowser.child(categories.id("entry_categories"));
         entryBrowser.alignment(HorizontalAlignment.CENTER, VerticalAlignment.TOP);
 
         return entryBrowser;
     }
 
-    public void setDisplayedEntry(GuidebookEntry entry, FlowLayout root) {
+    public void setDisplayedEntry(GuidebookEntry entry) {
         buildDescription(displayedEntry, entry);
         entry.parentRole.ifPresent(role -> updateRoleFlags(displayedEntry, role));
         entry.parentModifier.ifPresent(modifier -> updateModifierFlags(displayedEntry, modifier));
@@ -243,7 +263,7 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
     public void clickHyperlink(Identifier targetEntry) {
         for (GuidebookEntry entry : GuidebookEntryCollector.guidebookEntries) {
             if (entry.getId().equals(targetEntry)) {
-                setDisplayedEntry(entry, root);
+                setDisplayedEntry(entry);
             }
         }
     }

@@ -8,6 +8,9 @@
   "tip.starexpress.cooldown": "Ability usable in %ss",
 
   "tip.starexpress.search": "Search for Entries...",
+  "search.starexpress.options": "Search Options...",
+  "search.starexpress.show_disabled": "Show Disabled",
+  "search.starexpress.namespace": "Search By Namespace",
 
   "block.starexpress.circuitweaver_plush": "Circuitweaver Plush",
   "block.starexpress.jade_plush": "Jade Plush",
