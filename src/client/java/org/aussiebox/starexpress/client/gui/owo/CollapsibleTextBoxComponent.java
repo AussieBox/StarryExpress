@@ -24,7 +24,6 @@ public class CollapsibleTextBoxComponent extends FlowLayout {
     protected final ExpandableTextBoxComponent textBox;
     protected final FlowLayout contentLayout;
     protected final OverlayContainer<FlowLayout> overlay;
-
     protected final EventStream<OnToggled> toggledEvents = OnToggled.newStream();
 
     protected final List<Component> collapsibleChildren = new ArrayList<>();

@@ -11,6 +11,7 @@ import io.wispforest.owo.ui.container.Containers;
 import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.container.ScrollContainer;
 import io.wispforest.owo.ui.core.*;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -32,14 +33,29 @@ import org.aussiebox.starexpress.client.guidebook.GuidebookEntryCollector;
 import org.aussiebox.starexpress.client.guidebook.component.GuidebookElement;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
     public ScrollContainer<FlowLayout> displayedEntry;
     public FlowLayout entryBrowser;
     public FlowLayout root;
 
+    Object2ObjectOpenHashMap<String, ButtonComponent> buttons = new Object2ObjectOpenHashMap<>();
+    List<String> lastButtons = new ArrayList<>();
+
     public String search = "";
     public boolean showDisabled = false;
     public boolean searchByNamespace = false;
+
+    public TextureTitleCollapsibleContainer rolesCategory;
+        public TextureTitleCollapsibleContainer goodRolesCategory;
+        public TextureTitleCollapsibleContainer neutralRolesCategory;
+        public TextureTitleCollapsibleContainer evilRolesCategory;
+    public TextureTitleCollapsibleContainer modifiersCategory;
+    public TextureTitleCollapsibleContainer itemsCategory;
+    public CollapsibleContainer miscCategory;
 
     @Override
     protected @NotNull OwoUIAdapter<FlowLayout> createAdapter() {
@@ -51,7 +67,7 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
         displayedEntry = Containers.verticalScroll(Sizing.expand(), Sizing.expand(), Containers.verticalFlow(Sizing.expand(), Sizing.expand())).scrollbar(ScrollContainer.Scrollbar.flat(Color.WHITE)).scrollbarThiccness(1).scrollStep(12);
         entryBrowser = Containers.verticalFlow(Sizing.expand(40), Sizing.expand());
 
-        root.child(updateEntryBrowser(root));
+        root.child(updateEntryBrowser());
         root.child(Components.box(Sizing.fixed(1), Sizing.expand()).color(Color.ofArgb(0x33FFFFFF)));
         root.child(displayedEntry.id("displayed_entry"));
         root.surface(Surface.VANILLA_TRANSLUCENT);
@@ -59,17 +75,17 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
         this.root = root;
     }
 
-    public FlowLayout updateEntryBrowser(FlowLayout root) {
+    public FlowLayout updateEntryBrowser() {
         entryBrowser.clearChildren();
         FlowLayout flow = Containers.verticalFlow(Sizing.expand(), Sizing.content());
 
-        TextureTitleCollapsibleContainer rolesCategory = new TextureTitleCollapsibleContainer(Sizing.expand(), Sizing.content(), Text.translatable("guidebook.category.roles"), StarryExpress.id("textures/gui/sprites/hud/starstruck/ability_happy.png"), 14, 17, true);
-            TextureTitleCollapsibleContainer goodRolesCategory = new TextureTitleCollapsibleContainer(Sizing.expand(), Sizing.content(), Text.translatable("guidebook.category.roles.good"), Identifier.of("wathe", "textures/gui/sprites/hud/mood_happy.png"), 14, 17, false);
-            TextureTitleCollapsibleContainer neutralRolesCategory = new TextureTitleCollapsibleContainer(Sizing.expand(), Sizing.content(), Text.translatable("guidebook.category.roles.neutral"), Identifier.of("wathe", "textures/gui/sprites/hud/mood_mid.png"), 14, 17, false);
-            TextureTitleCollapsibleContainer evilRolesCategory = new TextureTitleCollapsibleContainer(Sizing.expand(), Sizing.content(), Text.translatable("guidebook.category.roles.evil"), Identifier.of("wathe", "textures/gui/sprites/hud/mood_killer.png"), 14, 17, false);
-        TextureTitleCollapsibleContainer modifiersCategory = new TextureTitleCollapsibleContainer(Sizing.expand(), Sizing.content(), Text.translatable("guidebook.category.modifiers"), Identifier.of("wathe", "textures/gui/sprites/hud/arrow_up.png"), 10, 13, false);
-        TextureTitleCollapsibleContainer itemsCategory = new TextureTitleCollapsibleContainer(Sizing.expand(), Sizing.content(), Text.translatable("guidebook.category.items"), Identifier.of("wathe", "textures/item/bat.png"), 16, 16, false);
-        CollapsibleContainer miscCategory = Containers.collapsible(Sizing.expand(), Sizing.content(), Text.translatable("guidebook.category.misc"), false);
+        rolesCategory = new TextureTitleCollapsibleContainer(Sizing.expand(), Sizing.content(), Text.translatable("guidebook.category.roles"), StarryExpress.id("textures/gui/sprites/hud/starstruck/ability_happy.png"), 14, 17, true);
+        goodRolesCategory = new TextureTitleCollapsibleContainer(Sizing.expand(), Sizing.content(), Text.translatable("guidebook.category.roles.good"), Identifier.of("wathe", "textures/gui/sprites/hud/mood_happy.png"), 14, 17, false);
+        neutralRolesCategory = new TextureTitleCollapsibleContainer(Sizing.expand(), Sizing.content(), Text.translatable("guidebook.category.roles.neutral"), Identifier.of("wathe", "textures/gui/sprites/hud/mood_mid.png"), 14, 17, false);
+        evilRolesCategory = new TextureTitleCollapsibleContainer(Sizing.expand(), Sizing.content(), Text.translatable("guidebook.category.roles.evil"), Identifier.of("wathe", "textures/gui/sprites/hud/mood_killer.png"), 14, 17, false);
+        modifiersCategory = new TextureTitleCollapsibleContainer(Sizing.expand(), Sizing.content(), Text.translatable("guidebook.category.modifiers"), Identifier.of("wathe", "textures/gui/sprites/hud/arrow_up.png"), 10, 13, false);
+        itemsCategory = new TextureTitleCollapsibleContainer(Sizing.expand(), Sizing.content(), Text.translatable("guidebook.category.items"), Identifier.of("wathe", "textures/item/bat.png"), 16, 16, false);
+        miscCategory = Containers.collapsible(Sizing.expand(), Sizing.content(), Text.translatable("guidebook.category.misc"), false);
 
         rolesCategory.onToggled().subscribe((nowExpanded -> this.uiAdapter.inflateAndMount()));
         goodRolesCategory.onToggled().subscribe((nowExpanded -> this.uiAdapter.inflateAndMount()));
@@ -100,35 +116,38 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
                 case ROLE -> {
                     if (entry.parentRole.isEmpty()) continue;
                     Role role = entry.parentRole.get();
-                    if (role.isInnocent() && !role.canUseKiller()) goodRolesCategory.child(button.id(role.identifier().toString()));
-                    if (!role.isInnocent() && !role.canUseKiller()) neutralRolesCategory.child(button.id(role.identifier().toString()));
-                    if (!role.isInnocent() && role.canUseKiller()) evilRolesCategory.child(button.id(role.identifier().toString()));
+                    if (role.isInnocent() && !role.canUseKiller()) goodRolesCategory.child(button.id("role.good." + role.identifier().toString()));
+                    if (!role.isInnocent() && !role.canUseKiller()) neutralRolesCategory.child(button.id("role.neutral." + role.identifier().toString()));
+                    if (!role.isInnocent() && role.canUseKiller()) evilRolesCategory.child(button.id("role.evil." + role.identifier().toString()));
                 }
                 case MODIFIER -> {
                     if (entry.parentModifier.isEmpty()) continue;
                     Modifier modifier = entry.parentModifier.get();
-                    modifiersCategory.child(button.id(modifier.identifier().toString()));
+                    modifiersCategory.child(button.id("modifier." + modifier.identifier().toString()));
                 }
                 case ITEM -> {
                     if (entry.parentItem.isEmpty()) continue;
                     Item item = entry.parentItem.get();
-                    itemsCategory.child(button.id(item.toString()));
+                    itemsCategory.child(button.id("item." + item));
                 }
                 case MISC -> {
                     if (entry.parentMisc.isEmpty()) continue;
                     String misc = entry.parentMisc.get();
-                    miscCategory.child(button.id(misc));
+                    miscCategory.child(button.id("misc." + misc));
                 }
             }
+
+            buttons.put(button.id(), button);
+            if (!lastButtons.contains(button.id())) lastButtons.add(button.id());
         }
 
-        rolesCategory.child(goodRolesCategory);
-        rolesCategory.child(neutralRolesCategory);
-        rolesCategory.child(evilRolesCategory);
-        flow.child(rolesCategory);
-        flow.child(modifiersCategory);
-        flow.child(itemsCategory);
-        flow.child(miscCategory);
+        rolesCategory.child(goodRolesCategory.id("roles.good"));
+        rolesCategory.child(neutralRolesCategory.id("roles.neutral"));
+        rolesCategory.child(evilRolesCategory.id("roles.evil"));
+        flow.child(rolesCategory.id("roles"));
+        flow.child(modifiersCategory.id("modifiers"));
+        flow.child(itemsCategory.id("items"));
+        flow.child(miscCategory.id("misc"));
         flow.padding(Insets.bottom(5));
 
         TextBoxComponent searchBox = Components.textBox(Sizing.expand());
@@ -137,6 +156,7 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
         searchBox.setPlaceholder(Text.translatable("tip.starexpress.search").withColor(0xAAAAAA));
         searchBox.onChanged().subscribe((value -> {
             this.search = value;
+            updateSearch();
         }));
 
         CollapsibleTextBoxComponent search = new CollapsibleTextBoxComponent(Sizing.expand(90), Sizing.content(), searchBox, false);
@@ -170,6 +190,48 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
         buildDescription(displayedEntry, entry);
         entry.parentRole.ifPresent(role -> updateRoleFlags(displayedEntry, role));
         entry.parentModifier.ifPresent(modifier -> updateModifierFlags(displayedEntry, modifier));
+    }
+
+    public void updateSearch() {
+        List<String> newButtons = new ArrayList<>();
+
+        for (String id : buttons.keySet()) {
+            ButtonComponent button = buttons.get(id);
+            String label = button.getMessage().getString();
+
+            if (label != null && label.toLowerCase().contains(search.toLowerCase())) newButtons.add(id);
+        }
+
+        for (String id : buttons.keySet()) {
+            ButtonComponent button = buttons.get(id);
+
+            if (newButtons.contains(id) && lastButtons.contains(id)) continue;
+            if (newButtons.contains(id) && !lastButtons.contains(id)) {
+                switch (id) {
+                    case String s when s.startsWith("role.good.") -> goodRolesCategory.child(button);
+                    case String s when s.startsWith("role.neutral.") -> neutralRolesCategory.child(button);
+                    case String s when s.startsWith("role.evil.") -> evilRolesCategory.child(button);
+                    case String s when s.startsWith("modifier.") -> modifiersCategory.child(button);
+                    case String s when s.startsWith("item.") -> itemsCategory.child(button);
+                    case String s when s.startsWith("misc.") -> miscCategory.child(button);
+                    case null, default -> {}
+                }
+            }
+            if (!newButtons.contains(id) && lastButtons.contains(id)) {
+                switch (id) {
+                    case String s when s.startsWith("role.good.") -> goodRolesCategory.removeChild(button);
+                    case String s when s.startsWith("role.neutral.") -> neutralRolesCategory.removeChild(button);
+                    case String s when s.startsWith("role.evil.") -> evilRolesCategory.removeChild(button);
+                    case String s when s.startsWith("modifier.") -> modifiersCategory.removeChild(button);
+                    case String s when s.startsWith("item.") -> itemsCategory.removeChild(button);
+                    case String s when s.startsWith("misc.") -> miscCategory.removeChild(button);
+                    case null, default -> {}
+                }
+            }
+        }
+
+        lastButtons = newButtons;
+        StarryExpress.LOGGER.info(Arrays.toString(goodRolesCategory.children().toArray()));
     }
 
     public void updateRoleFlags(ScrollContainer<FlowLayout> container, Role parent) {
