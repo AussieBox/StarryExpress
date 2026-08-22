@@ -2,6 +2,7 @@ package org.aussiebox.starexpress.client.guidebook;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import joptsimple.internal.Strings;
+import net.minecraft.client.resource.language.I18n;
 import net.minecraft.text.Text;
 import org.aussiebox.starexpress.client.guidebook.component.ConditionalElement;
 import org.aussiebox.starexpress.client.guidebook.component.DescriptionElement;
@@ -49,22 +50,28 @@ public class ElementRegistry {
         return conditionalRegistry;
     }
 
-    public static Text parseStringToContent(String string, boolean includeKeywords) {
-        String translated = Text.translatable(string).getString();
-        if (includeKeywords)
+    public static Text parseStringToContent(String key, boolean includeKeywords) {
+        String translated = I18n.translate(key);
+
+        if (includeKeywords) {
             for (GuidebookEntry entry : GuidebookEntryCollector.guidebookEntries) {
                 for (String keyword : entry.keywords) {
-                    StringBuilder parsed = new StringBuilder(Strings.EMPTY);
-                    String translatedKeyword = Text.translatable(keyword).getString();
+                    StringBuilder parsed = new StringBuilder();
+                    String translatedKeyword = net.minecraft.client.resource.language.I18n.translate(keyword);
                     String regex = "(?i)" + Pattern.quote(translatedKeyword);
                     String[] split = translated.split("(?<=" + regex + ")|(?=" + regex + ")");
                     for (String part : split) {
-                        if (part.equalsIgnoreCase(translatedKeyword)) parsed.append("<entry:\"").append(entry.getId()).append("\">").append(part).append("</entry>");
-                        else parsed.append(part);
+                        if (part.equalsIgnoreCase(translatedKeyword)) {
+                            parsed.append("<entry:\"").append(entry.getId()).append("\">").append(part).append("</entry>");
+                        } else {
+                            parsed.append(part);
+                        }
                     }
                     translated = parsed.toString();
                 }
             }
-        return Text.translatable(translated);
+        }
+        return Text.literal(translated);
     }
+
 }

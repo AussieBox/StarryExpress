@@ -1,0 +1,14 @@
+{
+  "title": "guidebook.misc.title.wathe:instinct",
+  "subtitle": "guidebook.misc.subtitle.wathe:instinct",
+  "keywords": [
+    "guidebook.misc.keyword.wathe:instinct"
+  ],
+  "description": [
+    {
+      "id": "description",
+      "type": "text",
+      "text": "guidebook.misc.description.wathe:instinct"
+    }
+  ]
+}

@@ -15,11 +15,13 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.item.Item;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextCodecs;
+import net.minecraft.util.Colors;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Language;
 import org.agmas.harpymodloader.config.HarpyModLoaderConfig;
@@ -34,10 +36,13 @@ import org.aussiebox.starexpress.client.guidebook.component.GuidebookElement;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
+// Note to Harpy modpack makers: please dont remake my entire guidebook system bro this took me so fucking long :/
+// (friendly reminder that you need permission to redistribute my code)
 public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
+    public Identifier displayedEntryId;
     public ScrollContainer<FlowLayout> displayedEntry;
     public FlowLayout entryBrowser;
     public FlowLayout root;
@@ -64,13 +69,15 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
 
     @Override
     protected void build(FlowLayout root) {
-        displayedEntry = Containers.verticalScroll(Sizing.expand(), Sizing.expand(), Containers.verticalFlow(Sizing.expand(), Sizing.expand())).scrollbar(ScrollContainer.Scrollbar.flat(Color.WHITE)).scrollbarThiccness(1).scrollStep(12);
+        displayedEntry = Containers.verticalScroll(Sizing.expand(60), Sizing.expand(), Containers.verticalFlow(Sizing.expand(), Sizing.expand())).scrollbar(ScrollContainer.Scrollbar.flat(Color.WHITE)).scrollbarThiccness(1).scrollStep(12);
         entryBrowser = Containers.verticalFlow(Sizing.expand(40), Sizing.expand());
 
         root.child(updateEntryBrowser());
         root.child(Components.box(Sizing.fixed(1), Sizing.expand()).color(Color.ofArgb(0x33FFFFFF)));
         root.child(displayedEntry.id("displayed_entry"));
         root.surface(Surface.VANILLA_TRANSLUCENT);
+
+        updateSearch();
 
         this.root = root;
     }
@@ -164,9 +171,11 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
         DropdownComponent dropdown = Components.dropdown(Sizing.expand()).text(Text.translatable("search.starexpress.options"));
         dropdown.checkbox(Text.translatable("search.starexpress.show_disabled"), showDisabled, (checked -> {
             this.showDisabled = checked;
+            updateSearch();
         }));
         dropdown.checkbox(Text.translatable("search.starexpress.namespace"), searchByNamespace, (checked -> {
             this.searchByNamespace = checked;
+            updateSearch();
         }));
 
         search.child(dropdown);
@@ -187,6 +196,7 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
     }
 
     public void setDisplayedEntry(GuidebookEntry entry) {
+        displayedEntryId = entry.getId();
         buildDescription(displayedEntry, entry);
         entry.parentRole.ifPresent(role -> updateRoleFlags(displayedEntry, role));
         entry.parentModifier.ifPresent(modifier -> updateModifierFlags(displayedEntry, modifier));
@@ -199,7 +209,20 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
             ButtonComponent button = buttons.get(id);
             String label = button.getMessage().getString();
 
-            if (label != null && label.toLowerCase().contains(search.toLowerCase())) newButtons.add(id);
+            List<GuidebookEntry> entries = GuidebookEntryCollector.guidebookEntries.stream()
+                    .filter(entry -> entry.getId().toString().equals(trimButtonId(id)))
+                    .toList();
+            if (entries.isEmpty()) continue;
+            GuidebookEntry entry = entries.getFirst();
+
+            if (!showDisabled) {
+                if (entry.parentRole.isPresent() && HarpyModLoaderConfig.HANDLER.instance().disabled.contains(entry.parentRole.get().identifier().toString())) continue;
+                if (entry.parentModifier.isPresent() && HarpyModLoaderConfig.HANDLER.instance().disabledModifiers.contains(entry.parentModifier.get().identifier().toString())) continue;
+            }
+
+            if (searchByNamespace) {
+                if (Identifier.of(trimButtonId(id)).getNamespace().toLowerCase().contains(search.toLowerCase())) newButtons.add(id);
+            } else if (label != null && label.toLowerCase().contains(search.toLowerCase())) newButtons.add(id);
         }
 
         for (String id : buttons.keySet()) {
@@ -207,31 +230,48 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
 
             if (newButtons.contains(id) && lastButtons.contains(id)) continue;
             if (newButtons.contains(id) && !lastButtons.contains(id)) {
-                switch (id) {
-                    case String s when s.startsWith("role.good.") -> goodRolesCategory.child(button);
-                    case String s when s.startsWith("role.neutral.") -> neutralRolesCategory.child(button);
-                    case String s when s.startsWith("role.evil.") -> evilRolesCategory.child(button);
-                    case String s when s.startsWith("modifier.") -> modifiersCategory.child(button);
-                    case String s when s.startsWith("item.") -> itemsCategory.child(button);
-                    case String s when s.startsWith("misc.") -> miscCategory.child(button);
-                    case null, default -> {}
-                }
+                addButton(id, button);
             }
             if (!newButtons.contains(id) && lastButtons.contains(id)) {
-                switch (id) {
-                    case String s when s.startsWith("role.good.") -> goodRolesCategory.removeChild(button);
-                    case String s when s.startsWith("role.neutral.") -> neutralRolesCategory.removeChild(button);
-                    case String s when s.startsWith("role.evil.") -> evilRolesCategory.removeChild(button);
-                    case String s when s.startsWith("modifier.") -> modifiersCategory.removeChild(button);
-                    case String s when s.startsWith("item.") -> itemsCategory.removeChild(button);
-                    case String s when s.startsWith("misc.") -> miscCategory.removeChild(button);
-                    case null, default -> {}
-                }
+                removeButton(id, button);
             }
         }
 
         lastButtons = newButtons;
-        StarryExpress.LOGGER.info(Arrays.toString(goodRolesCategory.children().toArray()));
+    }
+
+    public String trimButtonId(String id) {
+        return id
+                .replace("role.good.", "")
+                .replace("role.neutral.", "")
+                .replace("role.evil.", "")
+                .replace("modifier.", "")
+                .replace("item.", "")
+                .replace("misc.", "");
+    }
+
+    public void addButton(String id, ButtonComponent button) {
+        switch (id) {
+            case String s when s.startsWith("role.good.") -> goodRolesCategory.child(button);
+            case String s when s.startsWith("role.neutral.") -> neutralRolesCategory.child(button);
+            case String s when s.startsWith("role.evil.") -> evilRolesCategory.child(button);
+            case String s when s.startsWith("modifier.") -> modifiersCategory.child(button);
+            case String s when s.startsWith("item.") -> itemsCategory.child(button);
+            case String s when s.startsWith("misc.") -> miscCategory.child(button);
+            case null, default -> {}
+        }
+    }
+
+    public void removeButton(String id, ButtonComponent button) {
+        switch (id) {
+            case String s when s.startsWith("role.good.") -> goodRolesCategory.removeChild(button);
+            case String s when s.startsWith("role.neutral.") -> neutralRolesCategory.removeChild(button);
+            case String s when s.startsWith("role.evil.") -> evilRolesCategory.removeChild(button);
+            case String s when s.startsWith("modifier.") -> modifiersCategory.removeChild(button);
+            case String s when s.startsWith("item.") -> itemsCategory.removeChild(button);
+            case String s when s.startsWith("misc.") -> miscCategory.removeChild(button);
+            case null, default -> {}
+        }
     }
 
     public void updateRoleFlags(ScrollContainer<FlowLayout> container, Role parent) {
@@ -328,5 +368,67 @@ public class NewGuidebookScreen extends BaseOwoScreen<FlowLayout> {
                 setDisplayedEntry(entry);
             }
         }
+    }
+
+    @Override
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        Object2ObjectOpenHashMap<String, ButtonComponent> newButtons = new Object2ObjectOpenHashMap<>();
+
+        for (Map.Entry<String, ButtonComponent> buttonEntry : buttons.entrySet()) {
+            ButtonComponent button = buttonEntry.getValue();
+            Identifier id = Identifier.of(trimButtonId(buttonEntry.getKey()));
+
+            List<GuidebookEntry> entries = GuidebookEntryCollector.guidebookEntries.stream()
+                    .filter(entry -> entry.getId().equals(id))
+                    .toList();
+            if (entries.isEmpty()) continue;
+            GuidebookEntry entry = entries.getFirst();
+
+            if (entry.getId() == displayedEntryId) {
+                if (entry.parentRole.isPresent()) {
+                    Text text = Text.literal("» ").append(Text.translatable(entry.title)).withColor(entry.parentRole.get().color());
+                    if (button.getMessage() != text) {
+                        button.setMessage(text);
+                        newButtons.put(buttonEntry.getKey(), button);
+                    }
+                } else if (entry.parentModifier.isPresent()) {
+                    Text text = Text.literal("» ").append(Text.translatable(entry.title)).withColor(entry.parentModifier.get().color());
+                    if (button.getMessage() != text) {
+                        button.setMessage(text);
+                        newButtons.put(buttonEntry.getKey(), button);
+                    }
+                } else {
+                    Text text = Text.literal("» ").append(Text.translatable(entry.title));
+                    if (button.getMessage() != text) {
+                        button.setMessage(text);
+                        newButtons.put(buttonEntry.getKey(), button);
+                    }
+                }
+            } else {
+                if (entry.parentRole.isPresent() && HarpyModLoaderConfig.HANDLER.instance().disabled.contains(entry.parentRole.get().identifier().toString())) {
+                    Text text = Text.translatable(entry.title).withColor(Colors.LIGHT_GRAY);
+                    if (button.getMessage() != text) {
+                        button.setMessage(text);
+                        newButtons.put(buttonEntry.getKey(), button);
+                    }
+                } else if (entry.parentModifier.isPresent() && HarpyModLoaderConfig.HANDLER.instance().disabledModifiers.contains(entry.parentModifier.get().identifier().toString())) {
+                    Text text = Text.translatable(entry.title).withColor(Colors.LIGHT_GRAY);
+                    if (button.getMessage() != text) {
+                        button.setMessage(text);
+                        newButtons.put(buttonEntry.getKey(), button);
+                    }
+                } else {
+                    Text text = Text.translatable(entry.title);
+                    if (button.getMessage() != text) {
+                        button.setMessage(text);
+                        newButtons.put(buttonEntry.getKey(), button);
+                    }
+                }
+            }
+        }
+
+        buttons.putAll(newButtons);
+
+        super.render(context, mouseX, mouseY, delta);
     }
 }

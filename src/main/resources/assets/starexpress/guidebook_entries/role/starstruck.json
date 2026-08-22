@@ -1,14 +1,19 @@
 {
-  "title": "guidebook.role.starexpress:starstruck",
-  "subtitle": "Hello World!",
+  "title": "guidebook.role.title.starexpress:starstruck",
+  "subtitle": "guidebook.role.subtitle.starexpress:starstruck",
   "keywords": [
-    "guidebook.starexpress.starstruck.keyword"
+    "guidebook.role.keyword.starexpress:starstruck"
   ],
   "description": [
     {
-      "id": "my_variable_line_of_text",
+      "id": "introduction",
       "type": "text",
-      "text": "This is my <var:mymod:adjective> line of text!"
+      "text": "guidebook.role.description.starexpress:starstruck.introduction"
+    },
+    {
+      "id": "frequency",
+      "type": "text",
+      "text": "guidebook.role.description.starexpress:starstruck.frequency"
     }
   ]
 }

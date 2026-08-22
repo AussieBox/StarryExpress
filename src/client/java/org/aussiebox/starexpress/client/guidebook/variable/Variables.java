@@ -11,7 +11,6 @@ import org.agmas.harpymodloader.modifiers.Modifier;
 import org.aussiebox.starexpress.StarryExpress;
 
 public class Variables {
-
     public static Variable<Boolean> isOperator = VariableHandler.registerVariable(StarryExpress.id("is_operator"), false, (value -> {
         if (MinecraftClient.getInstance().player == null) return false;
         return MinecraftClient.getInstance().player.hasPermissionLevel(2);
